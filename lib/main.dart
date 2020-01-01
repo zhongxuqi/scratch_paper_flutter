@@ -6,6 +6,7 @@ import 'utils/languange.dart';
 import 'utils/cupertino.dart';
 import 'package:flutter_material_color_picker/flutter_material_color_picker.dart';
 import 'components/LineWeightPicker.dart';
+import 'components/Toast.dart';
 
 void main() => runApp(MyApp());
 
@@ -56,6 +57,8 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   final scratchModes = <ScratchMode>[ScratchMode.edit, ScratchMode.move, ScratchMode.eraser];
+  final GlobalKey<ScratchPaperState> _scratchPaperState = new GlobalKey<ScratchPaperState>();
+
   static const MaterialColor black = MaterialColor(
     0xFF000000,
     <int, Color>{
@@ -106,6 +109,7 @@ class _MainPageState extends State<MainPage> {
               right: 0,
               bottom: 0,
               child: ScratchPaper(
+                key: _scratchPaperState,
                 scratchMode: scratchMode,
                 selectedColor: selectedColor,
                 selectedLineWeight: scratchMode==ScratchMode.eraser?eraserSelectedLineWeight:selectedLineWeight,
@@ -258,13 +262,17 @@ class _MainPageState extends State<MainPage> {
                           IconButton(
                             icon: Icon(IconFonts.undo,size: 24,),
                             onPressed: () {
-
+                              if (_scratchPaperState.currentState == null || !_scratchPaperState.currentState.undo()) {
+                                showErrorToast(AppLocalizations.of(context).getLanguageText('noMoreUndo'));
+                              }
                             },
                           ),
                           IconButton(
                             icon: Icon(IconFonts.redo,size: 24,),
                             onPressed: () {
-
+                              if (_scratchPaperState.currentState == null || !_scratchPaperState.currentState.redo()) {
+                                showErrorToast(AppLocalizations.of(context).getLanguageText('noMoreRedo'));
+                              }
                             },
                           ),
                           PopupMenuButton<MoreAction>(
@@ -282,10 +290,18 @@ class _MainPageState extends State<MainPage> {
                               ),
                             ),
                             onSelected: (MoreAction result) {
-
+                              switch (result) {
+                                case MoreAction.backOrigin:
+                                  if (_scratchPaperState.currentState != null) {
+                                    _scratchPaperState.currentState.backOrigin();
+                                  }
+                                  break;
+                                default:
+                                  break;
+                              }
                             },
                             itemBuilder: (BuildContext context) {
-                              return <MoreAction>[MoreAction.import, MoreAction.export].map((item) {
+                              return <MoreAction>[MoreAction.backOrigin, MoreAction.import, MoreAction.export].map((item) {
                                 return PopupMenuItem<MoreAction>(
                                   value: item,
                                   child: Row(
@@ -326,12 +342,15 @@ class _MainPageState extends State<MainPage> {
 }
 
 enum MoreAction {
+  backOrigin,
   import,
   export,
 }
 
 IconData MoreAction2Icon(MoreAction action) {
   switch (action) {
+    case MoreAction.backOrigin:
+      return IconFonts.location;
     case MoreAction.import:
       return IconFonts.import;
     case MoreAction.export:
@@ -342,6 +361,8 @@ IconData MoreAction2Icon(MoreAction action) {
 
 String MoreAction2Desc(BuildContext context, MoreAction action) {
   switch (action) {
+    case MoreAction.backOrigin:
+      return AppLocalizations.of(context).getLanguageText('backOrigin');
     case MoreAction.import:
       return AppLocalizations.of(context).getLanguageText('import');
     case MoreAction.export:

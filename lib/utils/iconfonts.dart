@@ -17,4 +17,5 @@ class IconFonts {
   static const IconData more = IconData(0xe706, fontFamily: 'iconfont');
   static const IconData colors = IconData(0xe838, fontFamily: 'iconfont');
   static const IconData lineWeight = IconData(0xed3f, fontFamily: 'iconfont');
+  static const IconData location = IconData(0xe62e, fontFamily: 'iconfont');
 }

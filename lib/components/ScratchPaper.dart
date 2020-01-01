@@ -54,16 +54,46 @@ class ScratchPaper extends StatefulWidget {
   ScratchPaper({Key key, @required this.scratchMode, @required this.selectedColor, @required this.selectedLineWeight}): super(key: key);
 
   @override
-  _ScratchPaperState createState() => _ScratchPaperState();
+  ScratchPaperState createState() => ScratchPaperState();
 }
 
-class _ScratchPaperState extends State<ScratchPaper> {
+class ScratchPaperState extends State<ScratchPaper> {
   final LinkedList<Stroke> strokes = LinkedList<Stroke>();
+  final LinkedList<Stroke> undoStrokes = LinkedList<Stroke>();
   Point lastPoint;
   Stroke currStroke;
   Point translate = Point(x: 0, y: 0);
   double scale = 1;
   double lastScale = 1;
+
+  void backOrigin() {
+    setState(() {
+      scale = 1;
+      translate = Point(x: 0, y: 0);
+    });
+  }
+
+  bool undo() {
+    if (strokes.length <= 0) {
+      return false;
+    }
+    var lastStroke = strokes.last;
+    strokes.remove(lastStroke);
+    undoStrokes.add(lastStroke);
+    setState(() {});
+    return true;
+  }
+
+  bool redo() {
+    if (undoStrokes.length <= 0) {
+      return false;
+    }
+    var lastStroke = undoStrokes.last;
+    undoStrokes.remove(lastStroke);
+    strokes.add(lastStroke);
+    setState(() {});
+    return true;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -128,6 +158,7 @@ class _ScratchPaperState extends State<ScratchPaper> {
             case ScratchMode.eraser:
             case ScratchMode.edit:
               strokes.add(currStroke);
+              undoStrokes.clear();
               currStroke = null;
               lastPoint = null;
               setState(() {});

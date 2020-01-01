@@ -18,6 +18,9 @@ class AppLocalizations {
       'eraser': 'Eraser',
       'import': 'Import',
       'export': 'Export',
+      'noMoreUndo': 'No more undo',
+      'noMoreRedo': 'No more redo',
+      'backOrigin': 'Back origin',
     },
     'zh': {
       'edit': '编辑',
@@ -25,6 +28,9 @@ class AppLocalizations {
       'eraser': '橡皮擦',
       'import': '导入',
       'export': '导出',
+      'noMoreUndo': '没有更多可撤销',
+      'noMoreRedo': '没有更多可重做',
+      'backOrigin': '回到原点',
     }
   };
 
