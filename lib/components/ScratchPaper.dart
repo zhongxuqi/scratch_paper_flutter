@@ -46,7 +46,9 @@ Color ScratchMode2Color(ScratchMode mode) {
 }
 
 class ScratchPaper extends StatefulWidget {
-  ScratchPaper({Key key}): super(key: key);
+  final ScratchMode scratchMode;
+
+  ScratchPaper({Key key, @required this.scratchMode}): super(key: key);
 
   @override
   _ScratchPaperState createState() => _ScratchPaperState();
@@ -54,9 +56,12 @@ class ScratchPaper extends StatefulWidget {
 
 class _ScratchPaperState extends State<ScratchPaper> {
   final LinkedList<Stroke> strokes = LinkedList<Stroke>();
+  Point lastPoint;
   Stroke currStroke;
   Color color = Colors.black;
   double width = 5;
+  Point translate = Point(x: 0, y: 0);
+  double scale = 1;
 
   @override
   Widget build(BuildContext context) {
@@ -64,22 +69,50 @@ class _ScratchPaperState extends State<ScratchPaper> {
       color: Colors.white,
       child: GestureDetector(
         onPanStart: (DragStartDetails details) {
-          currStroke = Stroke(points: LinkedList<Point>()
-            ..add(Point(x: details.localPosition.dx, y: details.localPosition.dy)), color: color, width: width);
+          switch (widget.scratchMode) {
+            case ScratchMode.eraser:
+            case ScratchMode.edit:
+              currStroke = Stroke(points: LinkedList<Point>()
+                ..add(Point(x: -translate.x + details.localPosition.dx, y: -translate.y + details.localPosition.dy)), color: color, width: width);
+              break;
+            case ScratchMode.move:
+              lastPoint = Point(x: details.localPosition.dx, y: details.localPosition.dy);
+              break;
+          }
         },
         onPanUpdate: (DragUpdateDetails details) {
-          currStroke.points.add(Point(x: details.localPosition.dx, y: details.localPosition.dy));
-          setState(() {});
+          switch (widget.scratchMode) {
+            case ScratchMode.eraser:
+            case ScratchMode.edit:
+              currStroke.points.add(Point(x: -translate.x + details.localPosition.dx, y: -translate.y + details.localPosition.dy));
+              setState(() {});
+              break;
+            case ScratchMode.move:
+              var currPoint = Point(x: details.localPosition.dx, y: details.localPosition.dy);
+              translate = Point(x: translate.x + currPoint.x - lastPoint.x, y: translate.y + currPoint.y - lastPoint.y);
+              lastPoint = currPoint;
+              setState(() {});
+              break;
+          }
         },
         onPanEnd: (DragEndDetails details) {
-          strokes.add(currStroke);
-          currStroke = null;
-          setState(() {});
+          switch (widget.scratchMode) {
+            case ScratchMode.eraser:
+            case ScratchMode.edit:
+              strokes.add(currStroke);
+              currStroke = null;
+              setState(() {});
+              break;
+            case ScratchMode.move:
+              break;
+          }
         },
         child: CustomPaint(
           painter: ScratchPainter(
             strokes: strokes,
             currStroke: currStroke,
+            translate: translate,
+            scale: scale,
           ),
         ),
       ),
@@ -104,12 +137,14 @@ class Stroke extends LinkedListEntry<Stroke> {
 class ScratchPainter extends CustomPainter {
   final LinkedList<Stroke> strokes;
   final Stroke currStroke;
+  final Point translate;
+  final double scale;
 
-  ScratchPainter({@required this.strokes, @required this.currStroke});
+  ScratchPainter({@required this.strokes, @required this.currStroke, @required this.translate, @required this.scale});
 
   @override
   void paint(Canvas canvas, Size size) {
-    canvas.restore();
+    canvas.translate(translate.x, translate.y);
     var paint = Paint()
       ..style = PaintingStyle.stroke
       ..isAntiAlias = true
@@ -143,7 +178,6 @@ class ScratchPainter extends CustomPainter {
       }
       canvas.drawPath(path, paint);
     }
-    canvas.save();
   }
 
   @override

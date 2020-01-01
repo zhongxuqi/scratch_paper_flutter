@@ -69,7 +69,9 @@ class _MainPageState extends State<MainPage> {
               top: 0,
               right: 0,
               bottom: 0,
-              child: ScratchPaper(),
+              child: ScratchPaper(
+                scratchMode: scratchMode,
+              ),
             ),
             Positioned(
               top: 0,
