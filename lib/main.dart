@@ -89,8 +89,8 @@ class _MainPageState extends State<MainPage> {
   final lineWeights = <double>[1, 2, 4, 6, 8, 10];
   double selectedLineWeight = 4;
 
-  final eraserLineWeights = <double>[2, 4, 8, 12, 16, 20];
-  double eraserSelectedLineWeight = 8;
+  final eraserLineWeights = <double>[8, 12, 16, 20, 24, 28];
+  double eraserSelectedLineWeight = 16;
 
   @override
   Widget build(BuildContext context) {
@@ -108,7 +108,7 @@ class _MainPageState extends State<MainPage> {
               child: ScratchPaper(
                 scratchMode: scratchMode,
                 selectedColor: selectedColor,
-                selectedLineWeight: selectedLineWeight,
+                selectedLineWeight: scratchMode==ScratchMode.eraser?eraserSelectedLineWeight:selectedLineWeight,
               ),
             ),
             Positioned(
@@ -233,14 +233,20 @@ class _MainPageState extends State<MainPage> {
                                       Container(
                                         child: LineWeightPicker(
                                           selectedColor: selectedColor,
-                                          lineWeight: selectedLineWeight,
+                                          lineWeight: scratchMode==ScratchMode.eraser?eraserSelectedLineWeight:selectedLineWeight,
                                           onValue: (newValue) {
-                                            setState(() {
-                                              selectedLineWeight = newValue;
-                                            });
+                                            if (scratchMode == ScratchMode.eraser) {
+                                              setState(() {
+                                                eraserSelectedLineWeight = newValue;
+                                              });
+                                            } else {
+                                              setState(() {
+                                                selectedLineWeight = newValue;
+                                              });
+                                            }
                                             Navigator.of(context).pop();
                                           },
-                                          lineWeights: lineWeights,
+                                          lineWeights: scratchMode==ScratchMode.eraser?eraserLineWeights:lineWeights,
                                         ),
                                       ),
                                     ],

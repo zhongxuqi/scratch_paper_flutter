@@ -73,6 +73,16 @@ class _ScratchPaperState extends State<ScratchPaper> {
         onScaleStart: (details) {
           switch (widget.scratchMode) {
             case ScratchMode.eraser:
+              currStroke = Stroke(
+                points: LinkedList<Point>()..add(Point(
+                  x: -translate.x + details.localFocalPoint.dx / scale,
+                  y: -translate.y + details.localFocalPoint.dy / scale,
+                )),
+                color: Colors.white,
+                lineWeight: widget.selectedLineWeight,
+              );
+              lastPoint = Point(x: details.localFocalPoint.dx, y: details.localFocalPoint.dy);
+              break;
             case ScratchMode.edit:
               currStroke = Stroke(
                 points: LinkedList<Point>()..add(Point(
@@ -94,6 +104,7 @@ class _ScratchPaperState extends State<ScratchPaper> {
             case ScratchMode.eraser:
             case ScratchMode.edit:
               currStroke.points.add(Point(x: -translate.x + details.localFocalPoint.dx / scale, y: -translate.y + details.localFocalPoint.dy / scale));
+              lastPoint = Point(x: details.localFocalPoint.dx, y: details.localFocalPoint.dy);
               setState(() {});
               break;
             case ScratchMode.move:
@@ -118,6 +129,7 @@ class _ScratchPaperState extends State<ScratchPaper> {
             case ScratchMode.edit:
               strokes.add(currStroke);
               currStroke = null;
+              lastPoint = null;
               setState(() {});
               break;
             case ScratchMode.move:
@@ -126,6 +138,7 @@ class _ScratchPaperState extends State<ScratchPaper> {
         },
         child: CustomPaint(
           painter: ScratchPainter(
+            scratchMode: widget.scratchMode,
             strokes: strokes,
             currStroke: currStroke,
             translate: translate,
@@ -153,13 +166,30 @@ class Stroke extends LinkedListEntry<Stroke> {
 }
 
 class ScratchPainter extends CustomPainter {
+  final ScratchMode scratchMode;
   final LinkedList<Stroke> strokes;
   final Stroke currStroke;
   final Point translate;
   final double scale;
   final Point focalPoint;
 
-  ScratchPainter({@required this.strokes, @required this.currStroke, @required this.translate, @required this.scale, @required this.focalPoint});
+  ScratchPainter({@required this.scratchMode, @required this.strokes, @required this.currStroke, @required this.translate, @required this.scale, @required this.focalPoint});
+
+  void drawStroke(Canvas canvas, Paint paint, Stroke stroke) {
+    var path = Path()
+      ..fillType = PathFillType.evenOdd;
+    paint.color = stroke.color;
+    paint.strokeWidth = stroke.lineWeight.toDouble();
+
+    for (var i=0;i<stroke.points.length;i++) {
+      if (i == 0) {
+        path.moveTo(stroke.points.elementAt(i).x, stroke.points.elementAt(i).y);
+      } else {
+        path.lineTo(stroke.points.elementAt(i).x, stroke.points.elementAt(i).y);
+      }
+    }
+    canvas.drawPath(path, paint);
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -172,32 +202,20 @@ class ScratchPainter extends CustomPainter {
       ..strokeJoin = StrokeJoin.round;
 
     for (var stroke in strokes) {
-      var path = Path()
-        ..fillType = PathFillType.evenOdd;
-      paint.color = stroke.color;
-      paint.strokeWidth = stroke.lineWeight.toDouble();
-      for (var i=0;i<stroke.points.length;i++) {
-        if (i == 0) {
-          path.moveTo(stroke.points.elementAt(i).x, stroke.points.elementAt(i).y);
-        } else {
-          path.lineTo(stroke.points.elementAt(i).x, stroke.points.elementAt(i).y);
-        }
-      }
-      canvas.drawPath(path, paint);
+      drawStroke(canvas, paint, stroke);
     }
     if (currStroke != null) {
-      var path = Path();
-      paint.color = currStroke.color;
-      paint.strokeWidth = currStroke.lineWeight.toDouble();
-      for (var i=0;i<currStroke.points.length;i++) {
-        if (i == 0) {
-          path.moveTo(currStroke.points.elementAt(i).x, currStroke.points.elementAt(i).y);
-        } else {
-          path.lineTo(currStroke.points.elementAt(i).x, currStroke.points.elementAt(i).y);
-        }
-      }
-      canvas.drawPath(path, paint);
+      drawStroke(canvas, paint, currStroke);
     }
+
+    if (scratchMode == ScratchMode.eraser && focalPoint != null) {
+      paint.color = Colors.orange;
+      canvas.drawPoints(PointMode.points, <Offset>[Offset(
+        focalPoint.x / scale - translate.x,
+        focalPoint.y / scale - translate.y,
+      )], paint);
+    }
+
   }
 
   @override
