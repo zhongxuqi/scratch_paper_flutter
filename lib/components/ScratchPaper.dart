@@ -1,6 +1,49 @@
 import 'dart:collection';
-
 import 'package:flutter/material.dart';
+import 'package:scratch_paper_flutter/utils/iconfonts.dart';
+import '../utils/languange.dart';
+
+enum ScratchMode {
+  edit,
+  move,
+  eraser,
+}
+
+IconData ScratchMode2Icon(ScratchMode mode) {
+  switch (mode) {
+    case ScratchMode.edit:
+      return IconFonts.edit;
+    case ScratchMode.move:
+      return IconFonts.move;
+    case ScratchMode.eraser:
+      return IconFonts.eraser;
+  }
+  return null;
+}
+
+String ScratchMode2Desc(BuildContext context, ScratchMode mode) {
+  switch (mode) {
+    case ScratchMode.edit:
+      return AppLocalizations.of(context).getLanguageText('edit');
+    case ScratchMode.move:
+      return AppLocalizations.of(context).getLanguageText('move');
+    case ScratchMode.eraser:
+      return AppLocalizations.of(context).getLanguageText('eraser');
+  }
+  return null;
+}
+
+Color ScratchMode2Color(ScratchMode mode) {
+  switch (mode) {
+    case ScratchMode.edit:
+      return Colors.green;
+    case ScratchMode.move:
+      return Colors.blue;
+    case ScratchMode.eraser:
+      return Colors.orange;
+  }
+  return null;
+}
 
 class ScratchPaper extends StatefulWidget {
   ScratchPaper({Key key}): super(key: key);
@@ -10,8 +53,10 @@ class ScratchPaper extends StatefulWidget {
 }
 
 class _ScratchPaperState extends State<ScratchPaper> {
-  LinkedList<Stroke> strokes = LinkedList<Stroke>();
-  Offset lastPoint = Offset(0, 0);
+  final LinkedList<Stroke> strokes = LinkedList<Stroke>();
+  Stroke currStroke;
+  Color color = Colors.black;
+  double width = 5;
 
   @override
   Widget build(BuildContext context) {
@@ -19,19 +64,22 @@ class _ScratchPaperState extends State<ScratchPaper> {
       color: Colors.white,
       child: GestureDetector(
         onPanStart: (DragStartDetails details) {
-          lastPoint = Offset(details.localPosition.dx, details.localPosition.dy);
+          currStroke = Stroke(points: LinkedList<Point>()
+            ..add(Point(x: details.localPosition.dx, y: details.localPosition.dy)), color: color, width: width);
         },
         onPanUpdate: (DragUpdateDetails details) {
-          var currPoint = Offset(details.localPosition.dx, details.localPosition.dy);
-          strokes.addFirst(Stroke(from: lastPoint, to: currPoint, color: Colors.black, width: 1));
-          lastPoint = currPoint;
-          setState(() {
-
-          });
+          currStroke.points.add(Point(x: details.localPosition.dx, y: details.localPosition.dy));
+          setState(() {});
+        },
+        onPanEnd: (DragEndDetails details) {
+          strokes.add(currStroke);
+          currStroke = null;
+          setState(() {});
         },
         child: CustomPaint(
           painter: ScratchPainter(
             strokes: strokes,
+            currStroke: currStroke,
           ),
         ),
       ),
@@ -39,31 +87,63 @@ class _ScratchPaperState extends State<ScratchPaper> {
   }
 }
 
-class Stroke extends LinkedListEntry<Stroke> {
-  final Offset from, to;
-  final Color color;
-  final int width;
+class Point extends LinkedListEntry<Point> {
+  final double x, y;
 
-  Stroke({@required this.from, @required this.to, @required this.color, @required this.width});
+  Point({@required this.x, @required this.y});
+}
+
+class Stroke extends LinkedListEntry<Stroke> {
+  final LinkedList<Point> points;
+  final Color color;
+  final double width;
+
+  Stroke({@required this.points, @required this.color, @required this.width});
 }
 
 class ScratchPainter extends CustomPainter {
   final LinkedList<Stroke> strokes;
+  final Stroke currStroke;
 
-  ScratchPainter({@required this.strokes});
+  ScratchPainter({@required this.strokes, @required this.currStroke});
 
   @override
   void paint(Canvas canvas, Size size) {
+    canvas.restore();
     var paint = Paint()
-      ..style = PaintingStyle.fill
-      ..isAntiAlias = true;
+      ..style = PaintingStyle.stroke
+      ..isAntiAlias = true
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
     for (var stroke in strokes) {
+      var path = Path()
+        ..fillType = PathFillType.evenOdd;
       paint.color = stroke.color;
       paint.strokeWidth = stroke.width.toDouble();
-      canvas.drawLine(stroke.from, stroke.to, paint);
-      canvas.save();
-      canvas.restore();
+      for (var i=0;i<stroke.points.length;i++) {
+        if (i == 0) {
+          path.moveTo(stroke.points.elementAt(i).x, stroke.points.elementAt(i).y);
+        } else {
+          path.lineTo(stroke.points.elementAt(i).x, stroke.points.elementAt(i).y);
+        }
+      }
+      canvas.drawPath(path, paint);
     }
+    if (currStroke != null) {
+      var path = Path();
+      paint.color = currStroke.color;
+      paint.strokeWidth = currStroke.width.toDouble();
+      for (var i=0;i<currStroke.points.length;i++) {
+        if (i == 0) {
+          path.moveTo(currStroke.points.elementAt(i).x, currStroke.points.elementAt(i).y);
+        } else {
+          path.lineTo(currStroke.points.elementAt(i).x, currStroke.points.elementAt(i).y);
+        }
+      }
+      canvas.drawPath(path, paint);
+    }
+    canvas.save();
   }
 
   @override

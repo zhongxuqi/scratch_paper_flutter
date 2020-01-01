@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:scratch_paper_flutter/utils/iconfonts.dart';
 import './components/ScratchPaper.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'utils/languange.dart';
+import 'utils/cupertino.dart';
 
 void main() => runApp(MyApp());
 
@@ -21,6 +25,18 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
+      localizationsDelegates: [
+        const AppLocalizationsDelegate(),
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        ChineseCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: [
+        const Locale('en', 'US'),
+        const Locale('zh','CH'),
+      ],
+      debugShowCheckedModeBanner: false,
+      showSemanticsDebugger:false,
       initialRoute: '/',
       routes: {
         '/': (context) => MainPage(),
@@ -37,11 +53,13 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
+  final scratchModes = <ScratchMode>[ScratchMode.edit, ScratchMode.move, ScratchMode.eraser];
+  var scratchMode = ScratchMode.edit;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Colors.white,
       body: Padding(
         padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
         child: Stack(
@@ -52,6 +70,66 @@ class _MainPageState extends State<MainPage> {
               right: 0,
               bottom: 0,
               child: ScratchPaper(),
+            ),
+            Positioned(
+              top: 0,
+              left: 0,
+              child: Container(
+                margin: EdgeInsets.all(10),
+                padding: EdgeInsets.symmetric(horizontal: 15, vertical: 6),
+                decoration: BoxDecoration(
+                  color: ScratchMode2Color(scratchMode),
+                  borderRadius: BorderRadius.all(Radius.circular(999)),
+                ),
+                child: PopupMenuButton<ScratchMode>(
+                  initialValue: scratchMode,
+                  child: Row(
+                    children: <Widget>[
+                      Container(
+                        child: Icon(
+                          ScratchMode2Icon(scratchMode),
+                          color: Colors.white,
+                          size: 26,
+                        ),
+                      ),
+                      Container(
+                        child: Icon(
+                          IconFonts.dropdown,
+                          color: Colors.white,
+                          size: 26,
+                        ),
+                      ),
+                    ],
+                  ),
+                  onSelected: (ScratchMode result) { setState(() { scratchMode = result; }); },
+                  itemBuilder: (BuildContext context) {
+                    return scratchModes.map((item) {
+                      return PopupMenuItem<ScratchMode>(
+                        value: item,
+                        child: Row(
+                          children: <Widget>[
+                            Container(
+                              margin: EdgeInsets.only(right: 10),
+                              child: Icon(
+                                ScratchMode2Icon(item),
+                                color: Colors.black,
+                                size: 24,
+                              ),
+                            ),
+                            Text(
+                              ScratchMode2Desc(context, item),
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 15,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList();
+                  },
+                ),
+              ),
             ),
           ]
         ),
