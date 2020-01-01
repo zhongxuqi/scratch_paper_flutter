@@ -1,4 +1,5 @@
 import 'dart:collection';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:scratch_paper_flutter/utils/iconfonts.dart';
 import '../utils/languange.dart';
@@ -62,40 +63,50 @@ class _ScratchPaperState extends State<ScratchPaper> {
   double width = 5;
   Point translate = Point(x: 0, y: 0);
   double scale = 1;
+  double lastScale = 1;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       color: Colors.white,
       child: GestureDetector(
-        onPanStart: (DragStartDetails details) {
+        onScaleStart: (details) {
           switch (widget.scratchMode) {
             case ScratchMode.eraser:
             case ScratchMode.edit:
               currStroke = Stroke(points: LinkedList<Point>()
-                ..add(Point(x: -translate.x + details.localPosition.dx, y: -translate.y + details.localPosition.dy)), color: color, width: width);
+                ..add(Point(x: -translate.x + details.localFocalPoint.dx / scale, y: -translate.y + details.localFocalPoint.dy / scale)), color: color, width: width);
               break;
             case ScratchMode.move:
-              lastPoint = Point(x: details.localPosition.dx, y: details.localPosition.dy);
+              lastPoint = Point(x: details.localFocalPoint.dx, y: details.localFocalPoint.dy);
+              lastScale = 1;
               break;
           }
         },
-        onPanUpdate: (DragUpdateDetails details) {
+        onScaleUpdate: (details) {
           switch (widget.scratchMode) {
             case ScratchMode.eraser:
             case ScratchMode.edit:
-              currStroke.points.add(Point(x: -translate.x + details.localPosition.dx, y: -translate.y + details.localPosition.dy));
+              currStroke.points.add(Point(x: -translate.x + details.localFocalPoint.dx / scale, y: -translate.y + details.localFocalPoint.dy / scale));
               setState(() {});
               break;
             case ScratchMode.move:
-              var currPoint = Point(x: details.localPosition.dx, y: details.localPosition.dy);
-              translate = Point(x: translate.x + currPoint.x - lastPoint.x, y: translate.y + currPoint.y - lastPoint.y);
+              var factor = details.scale / lastScale;
+              scale = scale * factor;
+              lastScale = details.scale;
+
+              var currPoint = Point(x: details.localFocalPoint.dx, y: details.localFocalPoint.dy);
+              translate = Point(
+                  x: translate.x + (currPoint.x - lastPoint.x) / scale - details.localFocalPoint.dx * (factor - 1) / scale,
+                  y: translate.y + (currPoint.y - lastPoint.y) / scale - details.localFocalPoint.dy * (factor - 1) / scale,
+              );
               lastPoint = currPoint;
+
               setState(() {});
               break;
           }
         },
-        onPanEnd: (DragEndDetails details) {
+        onScaleEnd: (details) {
           switch (widget.scratchMode) {
             case ScratchMode.eraser:
             case ScratchMode.edit:
@@ -113,6 +124,7 @@ class _ScratchPaperState extends State<ScratchPaper> {
             currStroke: currStroke,
             translate: translate,
             scale: scale,
+            focalPoint: lastPoint,
           ),
         ),
       ),
@@ -139,11 +151,13 @@ class ScratchPainter extends CustomPainter {
   final Stroke currStroke;
   final Point translate;
   final double scale;
+  final Point focalPoint;
 
-  ScratchPainter({@required this.strokes, @required this.currStroke, @required this.translate, @required this.scale});
+  ScratchPainter({@required this.strokes, @required this.currStroke, @required this.translate, @required this.scale, @required this.focalPoint});
 
   @override
   void paint(Canvas canvas, Size size) {
+    canvas.scale(scale);
     canvas.translate(translate.x, translate.y);
     var paint = Paint()
       ..style = PaintingStyle.stroke
