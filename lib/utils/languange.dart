@@ -16,11 +16,15 @@ class AppLocalizations {
       'edit': 'Edit',
       'move': 'Move & Scale',
       'eraser': 'Eraser',
+      'import': 'Import',
+      'export': 'Export',
     },
     'zh': {
       'edit': '编辑',
       'move': '移动&缩放',
       'eraser': '橡皮擦',
+      'import': '导入',
+      'export': '导出',
     }
   };
 

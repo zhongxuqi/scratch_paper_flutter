@@ -14,4 +14,7 @@ class IconFonts {
   static const IconData reset = IconData(0xe614, fontFamily: 'iconfont');
   static const IconData edit = IconData(0xeb31, fontFamily: 'iconfont');
   static const IconData dropdown = IconData(0xe6e3, fontFamily: 'iconfont');
+  static const IconData more = IconData(0xe706, fontFamily: 'iconfont');
+  static const IconData colors = IconData(0xe838, fontFamily: 'iconfont');
+  static const IconData lineWeight = IconData(0xed3f, fontFamily: 'iconfont');
 }

@@ -48,8 +48,9 @@ Color ScratchMode2Color(ScratchMode mode) {
 
 class ScratchPaper extends StatefulWidget {
   final ScratchMode scratchMode;
+  final Color selectedColor;
 
-  ScratchPaper({Key key, @required this.scratchMode}): super(key: key);
+  ScratchPaper({Key key, @required this.scratchMode, @required this.selectedColor}): super(key: key);
 
   @override
   _ScratchPaperState createState() => _ScratchPaperState();
@@ -59,7 +60,6 @@ class _ScratchPaperState extends State<ScratchPaper> {
   final LinkedList<Stroke> strokes = LinkedList<Stroke>();
   Point lastPoint;
   Stroke currStroke;
-  Color color = Colors.black;
   double width = 5;
   Point translate = Point(x: 0, y: 0);
   double scale = 1;
@@ -75,7 +75,7 @@ class _ScratchPaperState extends State<ScratchPaper> {
             case ScratchMode.eraser:
             case ScratchMode.edit:
               currStroke = Stroke(points: LinkedList<Point>()
-                ..add(Point(x: -translate.x + details.localFocalPoint.dx / scale, y: -translate.y + details.localFocalPoint.dy / scale)), color: color, width: width);
+                ..add(Point(x: -translate.x + details.localFocalPoint.dx / scale, y: -translate.y + details.localFocalPoint.dy / scale)), color: widget.selectedColor, width: width);
               break;
             case ScratchMode.move:
               lastPoint = Point(x: details.localFocalPoint.dx, y: details.localFocalPoint.dy);
