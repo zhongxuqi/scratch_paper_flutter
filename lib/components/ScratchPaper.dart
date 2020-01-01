@@ -49,8 +49,9 @@ Color ScratchMode2Color(ScratchMode mode) {
 class ScratchPaper extends StatefulWidget {
   final ScratchMode scratchMode;
   final Color selectedColor;
+  final double selectedLineWeight;
 
-  ScratchPaper({Key key, @required this.scratchMode, @required this.selectedColor}): super(key: key);
+  ScratchPaper({Key key, @required this.scratchMode, @required this.selectedColor, @required this.selectedLineWeight}): super(key: key);
 
   @override
   _ScratchPaperState createState() => _ScratchPaperState();
@@ -60,7 +61,6 @@ class _ScratchPaperState extends State<ScratchPaper> {
   final LinkedList<Stroke> strokes = LinkedList<Stroke>();
   Point lastPoint;
   Stroke currStroke;
-  double width = 5;
   Point translate = Point(x: 0, y: 0);
   double scale = 1;
   double lastScale = 1;
@@ -74,8 +74,14 @@ class _ScratchPaperState extends State<ScratchPaper> {
           switch (widget.scratchMode) {
             case ScratchMode.eraser:
             case ScratchMode.edit:
-              currStroke = Stroke(points: LinkedList<Point>()
-                ..add(Point(x: -translate.x + details.localFocalPoint.dx / scale, y: -translate.y + details.localFocalPoint.dy / scale)), color: widget.selectedColor, width: width);
+              currStroke = Stroke(
+                points: LinkedList<Point>()..add(Point(
+                  x: -translate.x + details.localFocalPoint.dx / scale,
+                  y: -translate.y + details.localFocalPoint.dy / scale,
+                )),
+                color: widget.selectedColor,
+                lineWeight: widget.selectedLineWeight,
+              );
               break;
             case ScratchMode.move:
               lastPoint = Point(x: details.localFocalPoint.dx, y: details.localFocalPoint.dy);
@@ -141,9 +147,9 @@ class Point extends LinkedListEntry<Point> {
 class Stroke extends LinkedListEntry<Stroke> {
   final LinkedList<Point> points;
   final Color color;
-  final double width;
+  final double lineWeight;
 
-  Stroke({@required this.points, @required this.color, @required this.width});
+  Stroke({@required this.points, @required this.color, @required this.lineWeight});
 }
 
 class ScratchPainter extends CustomPainter {
@@ -169,7 +175,7 @@ class ScratchPainter extends CustomPainter {
       var path = Path()
         ..fillType = PathFillType.evenOdd;
       paint.color = stroke.color;
-      paint.strokeWidth = stroke.width.toDouble();
+      paint.strokeWidth = stroke.lineWeight.toDouble();
       for (var i=0;i<stroke.points.length;i++) {
         if (i == 0) {
           path.moveTo(stroke.points.elementAt(i).x, stroke.points.elementAt(i).y);
@@ -182,7 +188,7 @@ class ScratchPainter extends CustomPainter {
     if (currStroke != null) {
       var path = Path();
       paint.color = currStroke.color;
-      paint.strokeWidth = currStroke.width.toDouble();
+      paint.strokeWidth = currStroke.lineWeight.toDouble();
       for (var i=0;i<currStroke.points.length;i++) {
         if (i == 0) {
           path.moveTo(currStroke.points.elementAt(i).x, currStroke.points.elementAt(i).y);

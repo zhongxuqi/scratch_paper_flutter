@@ -5,6 +5,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'utils/languange.dart';
 import 'utils/cupertino.dart';
 import 'package:flutter_material_color_picker/flutter_material_color_picker.dart';
+import 'components/LineWeightPicker.dart';
 
 void main() => runApp(MyApp());
 
@@ -55,8 +56,41 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   final scratchModes = <ScratchMode>[ScratchMode.edit, ScratchMode.move, ScratchMode.eraser];
+  static const MaterialColor black = MaterialColor(
+    0xFF000000,
+    <int, Color>{
+      500: Color(0xFF000000),
+    },
+  );
+  final colors = const <ColorSwatch>[
+    black,
+    Colors.red,
+    Colors.pink,
+    Colors.purple,
+    Colors.deepPurple,
+    Colors.indigo,
+    Colors.blue,
+    Colors.lightBlue,
+    Colors.cyan,
+    Colors.teal,
+    Colors.green,
+    Colors.lightGreen,
+    Colors.lime,
+    Colors.yellow,
+    Colors.amber,
+    Colors.orange,
+    Colors.deepOrange,
+    Colors.brown,
+    Colors.grey,
+    Colors.blueGrey,
+  ];
   var scratchMode = ScratchMode.edit;
-  Color selectedColor = Colors.black;
+  Color selectedColor = black;
+  final lineWeights = <double>[1, 2, 4, 6, 8, 10];
+  double selectedLineWeight = 4;
+
+  final eraserLineWeights = <double>[2, 4, 8, 12, 16, 20];
+  double eraserSelectedLineWeight = 8;
 
   @override
   Widget build(BuildContext context) {
@@ -74,6 +108,7 @@ class _MainPageState extends State<MainPage> {
               child: ScratchPaper(
                 scratchMode: scratchMode,
                 selectedColor: selectedColor,
+                selectedLineWeight: selectedLineWeight,
               ),
             ),
             Positioned(
@@ -162,7 +197,7 @@ class _MainPageState extends State<MainPage> {
                                 context: context,
                                 builder: (BuildContext context) {
                                   return SimpleDialog(
-                                    contentPadding: EdgeInsets.only(bottom: 10),
+                                    contentPadding: EdgeInsets.all(0),
                                     children: <Widget>[
                                       Container(
                                         constraints: BoxConstraints(
@@ -177,6 +212,7 @@ class _MainPageState extends State<MainPage> {
                                             Navigator.of(context).pop();
                                           },
                                           selectedColor: selectedColor,
+                                          colors: colors,
                                         ),
                                       ),
                                     ],
@@ -188,7 +224,29 @@ class _MainPageState extends State<MainPage> {
                           IconButton(
                             icon: Icon(IconFonts.lineWeight,size: 24,),
                             onPressed: () {
-
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return SimpleDialog(
+                                    contentPadding: EdgeInsets.all(0),
+                                    children: <Widget>[
+                                      Container(
+                                        child: LineWeightPicker(
+                                          selectedColor: selectedColor,
+                                          lineWeight: selectedLineWeight,
+                                          onValue: (newValue) {
+                                            setState(() {
+                                              selectedLineWeight = newValue;
+                                            });
+                                            Navigator.of(context).pop();
+                                          },
+                                          lineWeights: lineWeights,
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
                             },
                           ),
                           IconButton(
