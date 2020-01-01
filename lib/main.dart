@@ -296,6 +296,11 @@ class _MainPageState extends State<MainPage> {
                                     _scratchPaperState.currentState.backOrigin();
                                   }
                                   break;
+                                case MoreAction.export:
+                                  if (_scratchPaperState.currentState != null) {
+                                    _scratchPaperState.currentState.export();
+                                  }
+                                  break;
                                 default:
                                   break;
                               }

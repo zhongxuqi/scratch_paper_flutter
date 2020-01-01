@@ -3,6 +3,9 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:scratch_paper_flutter/utils/iconfonts.dart';
 import '../utils/languange.dart';
+import 'package:image_gallery_saver/image_gallery_saver.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter_share/flutter_share.dart';
 
 enum ScratchMode {
   edit,
@@ -57,6 +60,47 @@ class ScratchPaper extends StatefulWidget {
   ScratchPaperState createState() => ScratchPaperState();
 }
 
+void drawStroke(Canvas canvas, Paint paint, Stroke stroke) {
+  var path = Path()
+    ..fillType = PathFillType.evenOdd;
+  paint.color = stroke.color;
+  paint.strokeWidth = stroke.lineWeight.toDouble();
+
+  for (var i=0;i<stroke.points.length;i++) {
+    if (i == 0) {
+      path.moveTo(stroke.points.elementAt(i).x, stroke.points.elementAt(i).y);
+    } else {
+      path.lineTo(stroke.points.elementAt(i).x, stroke.points.elementAt(i).y);
+    }
+  }
+  canvas.drawPath(path, paint);
+}
+
+void paintCanvas(Canvas canvas, double scale, Point translate, LinkedList<Stroke> strokes, Stroke currStroke, ScratchMode scratchMode, Point focalPoint) {
+  canvas.scale(scale);
+  canvas.translate(translate.x, translate.y);
+  var paint = Paint()
+    ..style = PaintingStyle.stroke
+    ..isAntiAlias = true
+    ..strokeCap = StrokeCap.round
+    ..strokeJoin = StrokeJoin.round;
+
+  for (var stroke in strokes) {
+    drawStroke(canvas, paint, stroke);
+  }
+  if (currStroke != null) {
+    drawStroke(canvas, paint, currStroke);
+  }
+
+  if (scratchMode == ScratchMode.eraser && focalPoint != null) {
+    paint.color = Colors.orange;
+    canvas.drawPoints(PointMode.points, <Offset>[Offset(
+      focalPoint.x / scale - translate.x,
+      focalPoint.y / scale - translate.y,
+    )], paint);
+  }
+}
+
 class ScratchPaperState extends State<ScratchPaper> {
   final LinkedList<Stroke> strokes = LinkedList<Stroke>();
   final LinkedList<Stroke> undoStrokes = LinkedList<Stroke>();
@@ -93,6 +137,42 @@ class ScratchPaperState extends State<ScratchPaper> {
     strokes.add(lastStroke);
     setState(() {});
     return true;
+  }
+
+  void export() async {
+    if (strokes.length <= 0) {
+      return;
+    }
+    Map<PermissionGroup, PermissionStatus> permissions = await PermissionHandler().requestPermissions([PermissionGroup.storage]);
+    if (permissions[PermissionGroup.storage] != PermissionStatus.granted) {
+      return;
+    }
+    Offset leftTopBorder, rightBottomBorder;
+    for (var stroke in strokes) {
+      for (var point in stroke.points) {
+        if (leftTopBorder == null || leftTopBorder.dx > point.x - stroke.lineWeight || leftTopBorder.dy > point.y - stroke.lineWeight) {
+          leftTopBorder = Offset(point.x - stroke.lineWeight, point.y - stroke.lineWeight);
+        }
+        if (rightBottomBorder == null || rightBottomBorder.dx < point.x + stroke.lineWeight || rightBottomBorder.dy < point.y + stroke.lineWeight) {
+          rightBottomBorder = Offset(point.x + stroke.lineWeight, point.y + stroke.lineWeight);
+        }
+      }
+    }
+    final recorder = PictureRecorder();
+    var translate = Point(x: leftTopBorder.dx, y: leftTopBorder.dy);
+    var leftTopPoint = Offset(0, 0);
+    var rightBottomPoint = Offset(rightBottomBorder.dx - leftTopBorder.dx, rightBottomBorder.dy - leftTopBorder.dy);
+    final canvas = Canvas(recorder, Rect.fromPoints(leftTopPoint, rightBottomPoint));
+    paintCanvas(canvas, 1, translate, strokes, null, ScratchMode.edit, null);
+    final picture = recorder.endRecording();
+    final img = await picture.toImage(rightBottomPoint.dx.toInt(), rightBottomPoint.dy.toInt());
+    final pngBytes = await img.toByteData(format: ImageByteFormat.png);
+    var result = await ImageGallerySaver.saveImage(pngBytes.buffer.asUint8List());
+    print(result.toString().substring(7));
+    await FlutterShare.shareFile(
+      title: 'ScratchPaper',
+      filePath: result.toString().substring(7),
+    );
   }
 
   @override
@@ -206,47 +286,9 @@ class ScratchPainter extends CustomPainter {
 
   ScratchPainter({@required this.scratchMode, @required this.strokes, @required this.currStroke, @required this.translate, @required this.scale, @required this.focalPoint});
 
-  void drawStroke(Canvas canvas, Paint paint, Stroke stroke) {
-    var path = Path()
-      ..fillType = PathFillType.evenOdd;
-    paint.color = stroke.color;
-    paint.strokeWidth = stroke.lineWeight.toDouble();
-
-    for (var i=0;i<stroke.points.length;i++) {
-      if (i == 0) {
-        path.moveTo(stroke.points.elementAt(i).x, stroke.points.elementAt(i).y);
-      } else {
-        path.lineTo(stroke.points.elementAt(i).x, stroke.points.elementAt(i).y);
-      }
-    }
-    canvas.drawPath(path, paint);
-  }
-
   @override
   void paint(Canvas canvas, Size size) {
-    canvas.scale(scale);
-    canvas.translate(translate.x, translate.y);
-    var paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..isAntiAlias = true
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-
-    for (var stroke in strokes) {
-      drawStroke(canvas, paint, stroke);
-    }
-    if (currStroke != null) {
-      drawStroke(canvas, paint, currStroke);
-    }
-
-    if (scratchMode == ScratchMode.eraser && focalPoint != null) {
-      paint.color = Colors.orange;
-      canvas.drawPoints(PointMode.points, <Offset>[Offset(
-        focalPoint.x / scale - translate.x,
-        focalPoint.y / scale - translate.y,
-      )], paint);
-    }
-
+    paintCanvas(canvas, scale, translate, strokes, currStroke, scratchMode, focalPoint);
   }
 
   @override

@@ -1,4 +1,4 @@
-package com.example.scratch_paper_flutter
+package com.musketeer.scratchpaper
 
 import androidx.annotation.NonNull;
 import io.flutter.embedding.android.FlutterActivity
