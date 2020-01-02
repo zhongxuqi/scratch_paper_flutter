@@ -21,6 +21,7 @@ class AppLocalizations {
       'noMoreUndo': 'No more undo',
       'noMoreRedo': 'No more redo',
       'backOrigin': 'Back origin',
+      'clear': 'Clear all content',
     },
     'zh': {
       'edit': '编辑',
@@ -31,6 +32,7 @@ class AppLocalizations {
       'noMoreUndo': '没有更多可撤销',
       'noMoreRedo': '没有更多可重做',
       'backOrigin': '回到原点',
+      'clear': '清空所有内容',
     }
   };
 

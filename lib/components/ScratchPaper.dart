@@ -117,6 +117,18 @@ class ScratchPaperState extends State<ScratchPaper> {
     });
   }
 
+  void reset() {
+    setState(() {
+      scale = 1;
+      translate = Point(x: 0, y: 0);
+      strokes.clear();
+      undoStrokes.clear();
+      lastPoint = null;
+      currStroke = null;
+      lastScale = 1;
+    });
+  }
+
   bool undo() {
     if (strokes.length <= 0) {
       return false;

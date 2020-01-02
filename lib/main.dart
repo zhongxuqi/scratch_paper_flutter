@@ -348,6 +348,7 @@ class _MainPageState extends State<MainPage> {
 
 enum MoreAction {
   backOrigin,
+  clear,
   import,
   export,
 }
@@ -356,6 +357,8 @@ IconData MoreAction2Icon(MoreAction action) {
   switch (action) {
     case MoreAction.backOrigin:
       return IconFonts.location;
+    case MoreAction.clear:
+      return IconFonts.reset;
     case MoreAction.import:
       return IconFonts.import;
     case MoreAction.export:
@@ -368,6 +371,8 @@ String MoreAction2Desc(BuildContext context, MoreAction action) {
   switch (action) {
     case MoreAction.backOrigin:
       return AppLocalizations.of(context).getLanguageText('backOrigin');
+    case MoreAction.clear:
+      return AppLocalizations.of(context).getLanguageText('clear');
     case MoreAction.import:
       return AppLocalizations.of(context).getLanguageText('import');
     case MoreAction.export:
