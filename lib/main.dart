@@ -90,7 +90,7 @@ class _MainPageState extends State<MainPage> {
   var scratchMode = ScratchMode.edit;
   Color selectedColor = black;
   final lineWeights = <double>[1, 2, 4, 6, 8, 10];
-  double selectedLineWeight = 4;
+  double selectedLineWeight = 2;
 
   final eraserLineWeights = <double>[8, 12, 16, 20, 24, 28];
   double eraserSelectedLineWeight = 16;

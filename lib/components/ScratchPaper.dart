@@ -1,5 +1,5 @@
 import 'dart:collection';
-import 'dart:ui';
+import 'dart:ui' as ui;
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:scratch_paper_flutter/utils/iconfonts.dart';
@@ -78,7 +78,7 @@ void drawStroke(Canvas canvas, Paint paint, Stroke stroke) {
   canvas.drawPath(path, paint);
 }
 
-void paintCanvas(Canvas canvas, double scale, Point translate, LinkedList<Stroke> strokes, Stroke currStroke, ScratchMode scratchMode, Point focalPoint) {
+void paintCanvas(Canvas canvas, double scale, Point translate, ui.Image image, Offset offset, LinkedList<Stroke> strokes, Stroke currStroke, ScratchMode scratchMode, Point focalPoint) {
   canvas.scale(scale);
   canvas.translate(translate.x, translate.y);
   var paint = Paint()
@@ -86,6 +86,10 @@ void paintCanvas(Canvas canvas, double scale, Point translate, LinkedList<Stroke
     ..isAntiAlias = true
     ..strokeCap = StrokeCap.round
     ..strokeJoin = StrokeJoin.round;
+
+  if (image != null) {
+    canvas.drawImage(image, offset, paint);
+  }
 
   for (var stroke in strokes) {
     drawStroke(canvas, paint, stroke);
@@ -96,7 +100,7 @@ void paintCanvas(Canvas canvas, double scale, Point translate, LinkedList<Stroke
 
   if (scratchMode == ScratchMode.eraser && focalPoint != null) {
     paint.color = Colors.orange;
-    canvas.drawPoints(PointMode.points, <Offset>[Offset(
+    canvas.drawPoints(ui.PointMode.points, <Offset>[Offset(
       focalPoint.x / scale - translate.x,
       focalPoint.y / scale - translate.y,
     )], paint);
@@ -104,13 +108,18 @@ void paintCanvas(Canvas canvas, double scale, Point translate, LinkedList<Stroke
 }
 
 class ScratchPaperState extends State<ScratchPaper> {
+  final maxStrokesLens = 10;
   final LinkedList<Stroke> strokes = LinkedList<Stroke>();
   final LinkedList<Stroke> undoStrokes = LinkedList<Stroke>();
+  bool isCheckingStrokes = false;
+  ui.Image image;
+  Offset offset;
   Point lastPoint;
   Stroke currStroke;
   Point translate = Point(x: 0, y: 0);
   double scale = 1;
   double lastScale = 1;
+  Offset _leftTopBorder, _rightBottomBorder;
 
   void backOrigin() {
     setState(() {
@@ -128,6 +137,8 @@ class ScratchPaperState extends State<ScratchPaper> {
       lastPoint = null;
       currStroke = null;
       lastScale = 1;
+      image = null;
+      offset = null;
     });
   }
 
@@ -153,6 +164,57 @@ class ScratchPaperState extends State<ScratchPaper> {
     return true;
   }
 
+  Future<ui.Image> _drawImage({bool belowMaxLen=false}) async {
+    _leftTopBorder = null;
+    _rightBottomBorder = null;
+    if (image != null) {
+      _leftTopBorder = Offset(offset.dx, offset.dy);
+      _rightBottomBorder = Offset(offset.dx + image.width, offset.dy + image.height);
+    }
+    LinkedList<Stroke> _strokes;
+    if (belowMaxLen) {
+      _strokes = LinkedList<Stroke>();
+      for(var i=0;i<maxStrokesLens;i++) {
+        _strokes.add(strokes.elementAt(i).clone());
+      }
+    } else {
+      _strokes = strokes;
+    }
+
+    for (var stroke in _strokes) {
+      for (var point in stroke.points) {
+        if (_leftTopBorder == null) {
+          _leftTopBorder = Offset(point.x - stroke.lineWeight, point.y - stroke.lineWeight);
+        } else if (_leftTopBorder.dx > point.x - stroke.lineWeight || _leftTopBorder.dy > point.y - stroke.lineWeight) {
+          _leftTopBorder = Offset(
+            _leftTopBorder.dx > point.x - stroke.lineWeight?point.x - stroke.lineWeight:_leftTopBorder.dx,
+            _leftTopBorder.dy > point.y - stroke.lineWeight?point.y - stroke.lineWeight:_leftTopBorder.dy,
+          );
+        }
+        if (_rightBottomBorder == null) {
+          _rightBottomBorder = Offset(point.x + stroke.lineWeight, point.y + stroke.lineWeight);
+        } else if (_rightBottomBorder.dx < point.x + stroke.lineWeight || _rightBottomBorder.dy < point.y + stroke.lineWeight) {
+          _rightBottomBorder = Offset(
+            _rightBottomBorder.dx < point.x + stroke.lineWeight?point.x + stroke.lineWeight:_rightBottomBorder.dx,
+            _rightBottomBorder.dy < point.y + stroke.lineWeight?point.y + stroke.lineWeight:_rightBottomBorder.dy,
+          );
+        }
+      }
+    }
+    final recorder = ui.PictureRecorder();
+    var translate = Point(x: -_leftTopBorder.dx, y: -_leftTopBorder.dy);
+    var leftTopPoint = Offset(0, 0);
+    var rightBottomPoint = Offset(_rightBottomBorder.dx - _leftTopBorder.dx, _rightBottomBorder.dy - _leftTopBorder.dy);
+    final canvas = Canvas(recorder, Rect.fromPoints(leftTopPoint, rightBottomPoint));
+    var paint = Paint()
+      ..style = PaintingStyle.fill
+      ..color = Colors.white;
+    canvas.drawRect(Rect.fromLTRB(0, 0, rightBottomPoint.dx, rightBottomPoint.dy), paint);
+    paintCanvas(canvas, 1, translate, image, offset, strokes, null, ScratchMode.edit, null);
+    final picture = recorder.endRecording();
+    return await picture.toImage(rightBottomPoint.dx.toInt(), rightBottomPoint.dy.toInt());
+  }
+
   void export() async {
     if (strokes.length <= 0) {
       return;
@@ -161,40 +223,8 @@ class ScratchPaperState extends State<ScratchPaper> {
     if (permissions[PermissionGroup.storage] != PermissionStatus.granted) {
       return;
     }
-    Offset leftTopBorder, rightBottomBorder;
-    for (var stroke in strokes) {
-      for (var point in stroke.points) {
-        if (leftTopBorder == null) {
-          leftTopBorder = Offset(point.x - stroke.lineWeight, point.y - stroke.lineWeight);
-        } else if (leftTopBorder.dx > point.x - stroke.lineWeight || leftTopBorder.dy > point.y - stroke.lineWeight) {
-          leftTopBorder = Offset(
-            leftTopBorder.dx > point.x - stroke.lineWeight?point.x - stroke.lineWeight:leftTopBorder.dx,
-            leftTopBorder.dy > point.y - stroke.lineWeight?point.y - stroke.lineWeight:leftTopBorder.dy,
-          );
-        }
-        if (rightBottomBorder == null) {
-          rightBottomBorder = Offset(point.x + stroke.lineWeight, point.y + stroke.lineWeight);
-        } else if (rightBottomBorder.dx < point.x + stroke.lineWeight || rightBottomBorder.dy < point.y + stroke.lineWeight) {
-          rightBottomBorder = Offset(
-            rightBottomBorder.dx < point.x + stroke.lineWeight?point.x + stroke.lineWeight:rightBottomBorder.dx,
-            rightBottomBorder.dy < point.y + stroke.lineWeight?point.y + stroke.lineWeight:rightBottomBorder.dy,
-          );
-        }
-      }
-    }
-    final recorder = PictureRecorder();
-    var translate = Point(x: -leftTopBorder.dx, y: -leftTopBorder.dy);
-    var leftTopPoint = Offset(0, 0);
-    var rightBottomPoint = Offset(rightBottomBorder.dx - leftTopBorder.dx, rightBottomBorder.dy - leftTopBorder.dy);
-    final canvas = Canvas(recorder, Rect.fromPoints(leftTopPoint, rightBottomPoint));
-    var paint = Paint()
-      ..style = PaintingStyle.fill
-      ..color = Colors.white;
-    canvas.drawRect(Rect.fromLTRB(0, 0, rightBottomPoint.dx, rightBottomPoint.dy), paint);
-    paintCanvas(canvas, 1, translate, strokes, null, ScratchMode.edit, null);
-    final picture = recorder.endRecording();
-    final img = await picture.toImage(rightBottomPoint.dx.toInt(), rightBottomPoint.dy.toInt());
-    final pngBytes = await img.toByteData(format: ImageByteFormat.png);
+    final img = await _drawImage();
+    final pngBytes = await img.toByteData(format: ui.ImageByteFormat.png);
     final externalDir = await getExternalStorageDirectory();
     final imageFilePath = path.join(externalDir.absolute.path, "scratch_paper_export.png");
     final imageFile = File(imageFilePath);
@@ -204,6 +234,18 @@ class ScratchPaperState extends State<ScratchPaper> {
       title: 'ScratchPaper',
       filePath: imageFilePath,
     );
+  }
+
+  void _checkStrokes() async {
+    if (strokes.length < 2 * maxStrokesLens) return;
+    if (isCheckingStrokes) return;
+    isCheckingStrokes = true;
+    image = await _drawImage(belowMaxLen: true);
+    offset = _leftTopBorder;
+    for (var i=0;i<maxStrokesLens;i++) {
+      strokes.remove(strokes.first);
+    }
+    isCheckingStrokes = false;
   }
 
   @override
@@ -273,6 +315,7 @@ class ScratchPaperState extends State<ScratchPaper> {
               currStroke = null;
               lastPoint = null;
               setState(() {});
+              _checkStrokes();
               break;
             case ScratchMode.move:
               break;
@@ -281,6 +324,8 @@ class ScratchPaperState extends State<ScratchPaper> {
         child: CustomPaint(
           painter: ScratchPainter(
             scratchMode: widget.scratchMode,
+            image: image,
+            offset: offset,
             strokes: strokes,
             currStroke: currStroke,
             translate: translate,
@@ -305,21 +350,31 @@ class Stroke extends LinkedListEntry<Stroke> {
   final double lineWeight;
 
   Stroke({@required this.points, @required this.color, @required this.lineWeight});
+
+  Stroke clone() {
+    return Stroke(
+      points: this.points,
+      color: this.color,
+      lineWeight: this.lineWeight,
+    );
+  }
 }
 
 class ScratchPainter extends CustomPainter {
   final ScratchMode scratchMode;
+  final ui.Image image;
+  final Offset offset;
   final LinkedList<Stroke> strokes;
   final Stroke currStroke;
   final Point translate;
   final double scale;
   final Point focalPoint;
 
-  ScratchPainter({@required this.scratchMode, @required this.strokes, @required this.currStroke, @required this.translate, @required this.scale, @required this.focalPoint});
+  ScratchPainter({@required this.scratchMode, @required this.image, @required this.offset, @required this.strokes, @required this.currStroke, @required this.translate, @required this.scale, @required this.focalPoint});
 
   @override
   void paint(Canvas canvas, Size size) {
-    paintCanvas(canvas, scale, translate, strokes, currStroke, scratchMode, focalPoint);
+    paintCanvas(canvas, scale, translate, image, offset, strokes, currStroke, scratchMode, focalPoint);
   }
 
   @override
