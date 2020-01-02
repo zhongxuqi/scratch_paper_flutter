@@ -1,11 +1,13 @@
 import 'dart:collection';
 import 'dart:ui';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:scratch_paper_flutter/utils/iconfonts.dart';
 import '../utils/languange.dart';
-import 'package:image_gallery_saver/image_gallery_saver.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_share/flutter_share.dart';
+import 'package:path/path.dart' as path;
 
 enum ScratchMode {
   edit,
@@ -162,28 +164,45 @@ class ScratchPaperState extends State<ScratchPaper> {
     Offset leftTopBorder, rightBottomBorder;
     for (var stroke in strokes) {
       for (var point in stroke.points) {
-        if (leftTopBorder == null || leftTopBorder.dx > point.x - stroke.lineWeight || leftTopBorder.dy > point.y - stroke.lineWeight) {
+        if (leftTopBorder == null) {
           leftTopBorder = Offset(point.x - stroke.lineWeight, point.y - stroke.lineWeight);
+        } else if (leftTopBorder.dx > point.x - stroke.lineWeight || leftTopBorder.dy > point.y - stroke.lineWeight) {
+          leftTopBorder = Offset(
+            leftTopBorder.dx > point.x - stroke.lineWeight?point.x - stroke.lineWeight:leftTopBorder.dx,
+            leftTopBorder.dy > point.y - stroke.lineWeight?point.y - stroke.lineWeight:leftTopBorder.dy,
+          );
         }
-        if (rightBottomBorder == null || rightBottomBorder.dx < point.x + stroke.lineWeight || rightBottomBorder.dy < point.y + stroke.lineWeight) {
+        if (rightBottomBorder == null) {
           rightBottomBorder = Offset(point.x + stroke.lineWeight, point.y + stroke.lineWeight);
+        } else if (rightBottomBorder.dx < point.x + stroke.lineWeight || rightBottomBorder.dy < point.y + stroke.lineWeight) {
+          rightBottomBorder = Offset(
+            rightBottomBorder.dx < point.x + stroke.lineWeight?point.x + stroke.lineWeight:rightBottomBorder.dx,
+            rightBottomBorder.dy < point.y + stroke.lineWeight?point.y + stroke.lineWeight:rightBottomBorder.dy,
+          );
         }
       }
     }
     final recorder = PictureRecorder();
-    var translate = Point(x: leftTopBorder.dx, y: leftTopBorder.dy);
+    var translate = Point(x: -leftTopBorder.dx, y: -leftTopBorder.dy);
     var leftTopPoint = Offset(0, 0);
     var rightBottomPoint = Offset(rightBottomBorder.dx - leftTopBorder.dx, rightBottomBorder.dy - leftTopBorder.dy);
     final canvas = Canvas(recorder, Rect.fromPoints(leftTopPoint, rightBottomPoint));
+    var paint = Paint()
+      ..style = PaintingStyle.fill
+      ..color = Colors.white;
+    canvas.drawRect(Rect.fromLTRB(0, 0, rightBottomPoint.dx, rightBottomPoint.dy), paint);
     paintCanvas(canvas, 1, translate, strokes, null, ScratchMode.edit, null);
     final picture = recorder.endRecording();
     final img = await picture.toImage(rightBottomPoint.dx.toInt(), rightBottomPoint.dy.toInt());
     final pngBytes = await img.toByteData(format: ImageByteFormat.png);
-    var result = await ImageGallerySaver.saveImage(pngBytes.buffer.asUint8List());
-    print(result.toString().substring(7));
+    final externalDir = await getExternalStorageDirectory();
+    final imageFilePath = path.join(externalDir.absolute.path, "scratch_paper_export.png");
+    final imageFile = File(imageFilePath);
+    await imageFile.writeAsBytes(pngBytes.buffer.asInt8List(), mode: FileMode.writeOnly, flush: true);
+
     await FlutterShare.shareFile(
       title: 'ScratchPaper',
-      filePath: result.toString().substring(7),
+      filePath: imageFilePath,
     );
   }
 

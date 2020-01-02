@@ -311,7 +311,7 @@ class _MainPageState extends State<MainPage> {
                               }
                             },
                             itemBuilder: (BuildContext context) {
-                              return <MoreAction>[MoreAction.backOrigin, MoreAction.import, MoreAction.export].map((item) {
+                              return <MoreAction>[MoreAction.backOrigin, MoreAction.clear, MoreAction.import, MoreAction.export].map((item) {
                                 return PopupMenuItem<MoreAction>(
                                   value: item,
                                   child: Row(
