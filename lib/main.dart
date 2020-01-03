@@ -330,7 +330,6 @@ class _MainPageState extends State<MainPage> {
                                   }
                                   if (!mounted) return;
                                   if (resultList.length <= 0) return;
-//                                  var imageFile = await ImagePicker.pickImage(source: ImageSource.gallery);
                                   ui.decodeImageFromList((await resultList[0].getByteData()).buffer.asUint8List(), (image) {
                                     _scratchPaperState.currentState.image = image;
                                   });

@@ -169,14 +169,28 @@ class ScratchPaperState extends State<ScratchPaper> {
     showAlertDialog(context, AppLocalizations.of(context).getLanguageText('importWillClear'), callback: () {
       setState(() {
         _image = img;
-        offset = Offset((MediaQuery.of(context).size.width - img.width) / 2, (MediaQuery.of(context).size.height - img.height) / 2);
-        scale = 1;
         translate = Point(x: 0, y: 0);
         strokes.clear();
         undoStrokes.clear();
         lastPoint = null;
         currStroke = null;
         lastScale = 1;
+
+        if (img.width > MediaQuery.of(context).size.width || img.height > MediaQuery.of(context).size.height) {
+          var scaleH = MediaQuery.of(context).size.width / img.width;
+          var scaleV = MediaQuery.of(context).size.height / img.height;
+          scale = scaleH < scaleV ? scaleH : scaleV;
+          offset = Offset(
+            (MediaQuery.of(context).size.width / scale - img.width) / 2,
+            (MediaQuery.of(context).size.height / scale - img.height) / 2,
+          );
+        } else {
+          scale = 1;
+          offset = Offset(
+            (MediaQuery.of(context).size.width - img.width) / 2,
+            (MediaQuery.of(context).size.height - img.height) / 2,
+          );
+        }
       });
     });
   }
