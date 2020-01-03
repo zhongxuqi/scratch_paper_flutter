@@ -3,11 +3,12 @@ import 'dart:ui' as ui;
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:scratch_paper_flutter/utils/iconfonts.dart';
-import '../utils/languange.dart';
+import '../utils/language.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:flutter_share/flutter_share.dart';
 import 'package:path/path.dart' as path;
+import 'alert.dart';
+import 'Toast.dart';
 
 enum ScratchMode {
   edit,
@@ -112,7 +113,7 @@ class ScratchPaperState extends State<ScratchPaper> {
   final LinkedList<Stroke> strokes = LinkedList<Stroke>();
   final LinkedList<Stroke> undoStrokes = LinkedList<Stroke>();
   bool isCheckingStrokes = false;
-  ui.Image image;
+  ui.Image _image;
   Offset offset;
   Point lastPoint;
   Stroke currStroke;
@@ -137,7 +138,7 @@ class ScratchPaperState extends State<ScratchPaper> {
       lastPoint = null;
       currStroke = null;
       lastScale = 1;
-      image = null;
+      _image = null;
       offset = null;
     });
   }
@@ -164,12 +165,30 @@ class ScratchPaperState extends State<ScratchPaper> {
     return true;
   }
 
+  void set image(ui.Image img) {
+    showAlertDialog(context, AppLocalizations.of(context).getLanguageText('importWillClear'), callback: () {
+      setState(() {
+        image = img;
+        offset = Offset((img.width - MediaQuery.of(context).size.width) / 2, (img.height - MediaQuery.of(context).size.height) / 2);
+        scale = 1;
+        translate = Point(x: 0, y: 0);
+        strokes.clear();
+        undoStrokes.clear();
+        lastPoint = null;
+        currStroke = null;
+        lastScale = 1;
+        _image = null;
+        offset = null;
+      });
+    });
+  }
+
   Future<ui.Image> _drawImage({bool belowMaxLen=false}) async {
     _leftTopBorder = null;
     _rightBottomBorder = null;
-    if (image != null) {
+    if (_image != null) {
       _leftTopBorder = Offset(offset.dx, offset.dy);
-      _rightBottomBorder = Offset(offset.dx + image.width, offset.dy + image.height);
+      _rightBottomBorder = Offset(offset.dx + _image.width, offset.dy + _image.height);
     }
     LinkedList<Stroke> _strokes;
     if (belowMaxLen) {
@@ -210,18 +229,19 @@ class ScratchPaperState extends State<ScratchPaper> {
       ..style = PaintingStyle.fill
       ..color = Colors.white;
     canvas.drawRect(Rect.fromLTRB(0, 0, rightBottomPoint.dx, rightBottomPoint.dy), paint);
-    paintCanvas(canvas, 1, translate, image, offset, strokes, null, ScratchMode.edit, null);
+    paintCanvas(canvas, 1, translate, _image, offset, strokes, null, ScratchMode.edit, null);
     final picture = recorder.endRecording();
     return await picture.toImage(rightBottomPoint.dx.toInt(), rightBottomPoint.dy.toInt());
   }
 
-  void export() async {
+  Future<String> export() async {
     if (strokes.length <= 0) {
-      return;
+      showErrorToast(AppLocalizations.of(context).getLanguageText('cantShareEmpty'));
+      return "";
     }
     Map<PermissionGroup, PermissionStatus> permissions = await PermissionHandler().requestPermissions([PermissionGroup.storage]);
     if (permissions[PermissionGroup.storage] != PermissionStatus.granted) {
-      return;
+      return "";
     }
     final img = await _drawImage();
     final pngBytes = await img.toByteData(format: ui.ImageByteFormat.png);
@@ -229,18 +249,14 @@ class ScratchPaperState extends State<ScratchPaper> {
     final imageFilePath = path.join(externalDir.absolute.path, "scratch_paper_export.png");
     final imageFile = File(imageFilePath);
     await imageFile.writeAsBytes(pngBytes.buffer.asInt8List(), mode: FileMode.writeOnly, flush: true);
-
-    await FlutterShare.shareFile(
-      title: 'ScratchPaper',
-      filePath: imageFilePath,
-    );
+    return imageFilePath;
   }
 
   void _checkStrokes() async {
     if (strokes.length < 2 * maxStrokesLens) return;
     if (isCheckingStrokes) return;
     isCheckingStrokes = true;
-    image = await _drawImage(belowMaxLen: true);
+    _image = await _drawImage(belowMaxLen: true);
     offset = _leftTopBorder;
     for (var i=0;i<maxStrokesLens;i++) {
       strokes.remove(strokes.first);
@@ -324,7 +340,7 @@ class ScratchPaperState extends State<ScratchPaper> {
         child: CustomPaint(
           painter: ScratchPainter(
             scratchMode: widget.scratchMode,
-            image: image,
+            image: _image,
             offset: offset,
             strokes: strokes,
             currStroke: currStroke,

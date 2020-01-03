@@ -2,11 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:scratch_paper_flutter/utils/iconfonts.dart';
 import './components/ScratchPaper.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'utils/languange.dart';
+import 'utils/language.dart';
 import 'utils/cupertino.dart';
 import 'package:flutter_material_color_picker/flutter_material_color_picker.dart';
 import 'components/LineWeightPicker.dart';
 import 'components/Toast.dart';
+import 'package:flutter_share/flutter_share.dart';
+import 'package:fluwx/fluwx.dart' as fluwx;
+import 'package:multi_image_picker/multi_image_picker.dart';
+import 'dart:ui' as ui;
 
 void main() => runApp(MyApp());
 
@@ -94,6 +98,13 @@ class _MainPageState extends State<MainPage> {
 
   final eraserLineWeights = <double>[8, 12, 16, 20, 24, 28];
   double eraserSelectedLineWeight = 16;
+
+  @override
+  void initState() {
+    super.initState();
+    fluwx.registerWxApi(
+        appId: "wx27f355795896793b", doOnAndroid: true, doOnIOS: true);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -289,29 +300,54 @@ class _MainPageState extends State<MainPage> {
                                 size: 22,
                               ),
                             ),
-                            onSelected: (MoreAction result) {
+                            onSelected: (MoreAction result) async {
+                              if (_scratchPaperState.currentState == null) return;
                               switch (result) {
                                 case MoreAction.backOrigin:
-                                  if (_scratchPaperState.currentState != null) {
-                                    _scratchPaperState.currentState.backOrigin();
-                                  }
+                                  _scratchPaperState.currentState.backOrigin();
                                   break;
                                 case MoreAction.export:
-                                  if (_scratchPaperState.currentState != null) {
-                                    _scratchPaperState.currentState.export();
+                                  var imageFilePath = await _scratchPaperState.currentState.export();
+                                  if (imageFilePath != "") {
+                                    await FlutterShare.shareFile(
+                                      title: 'ScratchPaper',
+                                      filePath: imageFilePath,
+                                    );
                                   }
                                   break;
                                 case MoreAction.clear:
-                                  if (_scratchPaperState.currentState != null) {
-                                    _scratchPaperState.currentState.reset();
-                                  }
+                                  _scratchPaperState.currentState.reset();
                                   break;
-                                default:
+                                case MoreAction.import:
+//                                  List<Asset> resultList = List<Asset>();
+//                                  try {
+//                                    resultList = await MultiImagePicker.pickImages(
+//                                      maxImages: 1,
+////                                      enableCamera: true,
+//                                    );
+//                                  } on Exception catch (e) {
+//                                    print(e.toString());
+//                                  }
+//                                  if (!mounted) return;
+//                                  if (resultList.length <= 0) return;
+////                                  var imageFile = await ImagePicker.pickImage(source: ImageSource.gallery);
+//                                  ui.decodeImageFromList((await resultList[0].getByteData()).buffer.asUint8List(), (image) {
+//                                    _scratchPaperState.currentState.image = image;
+//                                  });
+                                  break;
+                                case MoreAction.wechat:
+                                  var imageFilePath = await _scratchPaperState.currentState.export();
+                                  if (imageFilePath != "") {
+                                    fluwx.shareToWeChat(fluwx.WeChatShareImageModel(
+                                      image: "file://$imageFilePath",
+                                      scene: fluwx.WeChatScene.SESSION,
+                                    ));
+                                  }
                                   break;
                               }
                             },
                             itemBuilder: (BuildContext context) {
-                              return <MoreAction>[MoreAction.backOrigin, MoreAction.clear, MoreAction.import, MoreAction.export].map((item) {
+                              return <MoreAction>[MoreAction.backOrigin, MoreAction.clear, MoreAction.import, MoreAction.export, MoreAction.wechat].map((item) {
                                 return PopupMenuItem<MoreAction>(
                                   value: item,
                                   child: Row(
@@ -356,6 +392,7 @@ enum MoreAction {
   clear,
   import,
   export,
+  wechat,
 }
 
 IconData MoreAction2Icon(MoreAction action) {
@@ -368,6 +405,8 @@ IconData MoreAction2Icon(MoreAction action) {
       return IconFonts.import;
     case MoreAction.export:
       return IconFonts.export;
+    case MoreAction.wechat:
+      return IconFonts.wechat;
   }
   return null;
 }
@@ -382,6 +421,8 @@ String MoreAction2Desc(BuildContext context, MoreAction action) {
       return AppLocalizations.of(context).getLanguageText('import');
     case MoreAction.export:
       return AppLocalizations.of(context).getLanguageText('export');
+    case MoreAction.wechat:
+      return AppLocalizations.of(context).getLanguageText('shareWechat');
   }
   return null;
 }
