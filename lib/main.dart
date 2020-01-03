@@ -319,21 +319,21 @@ class _MainPageState extends State<MainPage> {
                                   _scratchPaperState.currentState.reset();
                                   break;
                                 case MoreAction.import:
-//                                  List<Asset> resultList = List<Asset>();
-//                                  try {
-//                                    resultList = await MultiImagePicker.pickImages(
-//                                      maxImages: 1,
-////                                      enableCamera: true,
-//                                    );
-//                                  } on Exception catch (e) {
-//                                    print(e.toString());
-//                                  }
-//                                  if (!mounted) return;
-//                                  if (resultList.length <= 0) return;
-////                                  var imageFile = await ImagePicker.pickImage(source: ImageSource.gallery);
-//                                  ui.decodeImageFromList((await resultList[0].getByteData()).buffer.asUint8List(), (image) {
-//                                    _scratchPaperState.currentState.image = image;
-//                                  });
+                                  List<Asset> resultList = List<Asset>();
+                                  try {
+                                    resultList = await MultiImagePicker.pickImages(
+                                      maxImages: 1,
+                                      enableCamera: true,
+                                    );
+                                  } on Exception catch (e) {
+                                    print(e.toString());
+                                  }
+                                  if (!mounted) return;
+                                  if (resultList.length <= 0) return;
+//                                  var imageFile = await ImagePicker.pickImage(source: ImageSource.gallery);
+                                  ui.decodeImageFromList((await resultList[0].getByteData()).buffer.asUint8List(), (image) {
+                                    _scratchPaperState.currentState.image = image;
+                                  });
                                   break;
                                 case MoreAction.wechat:
                                   var imageFilePath = await _scratchPaperState.currentState.export();

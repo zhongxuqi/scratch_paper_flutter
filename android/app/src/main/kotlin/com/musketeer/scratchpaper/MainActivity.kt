@@ -11,12 +11,12 @@ class MainActivity: FlutterActivity() {
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         GeneratedPluginRegistrant.registerWith(flutterEngine);
 
-        UMConfigure.init(this.applicationContext, "56ecff3ce0f55ac331000a80", "main", UMConfigure.DEVICE_TYPE_PHONE, null)
+        UMConfigure.init(this, "56ecff3ce0f55ac331000a80", "main", UMConfigure.DEVICE_TYPE_PHONE, null)
         MobclickAgent.setPageCollectionMode(MobclickAgent.PageMode.MANUAL)
     }
 
     override fun onResume() {
-        super.onPostResume()
+        super.onResume()
         MobclickAgent.onResume(this)
     }
 

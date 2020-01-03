@@ -168,8 +168,8 @@ class ScratchPaperState extends State<ScratchPaper> {
   void set image(ui.Image img) {
     showAlertDialog(context, AppLocalizations.of(context).getLanguageText('importWillClear'), callback: () {
       setState(() {
-        image = img;
-        offset = Offset((img.width - MediaQuery.of(context).size.width) / 2, (img.height - MediaQuery.of(context).size.height) / 2);
+        _image = img;
+        offset = Offset((MediaQuery.of(context).size.width - img.width) / 2, (MediaQuery.of(context).size.height - img.height) / 2);
         scale = 1;
         translate = Point(x: 0, y: 0);
         strokes.clear();
@@ -177,8 +177,6 @@ class ScratchPaperState extends State<ScratchPaper> {
         lastPoint = null;
         currStroke = null;
         lastScale = 1;
-        _image = null;
-        offset = null;
       });
     });
   }
@@ -235,7 +233,7 @@ class ScratchPaperState extends State<ScratchPaper> {
   }
 
   Future<String> export() async {
-    if (strokes.length <= 0) {
+    if (_image == null && strokes.length <= 0) {
       showErrorToast(AppLocalizations.of(context).getLanguageText('cantShareEmpty'));
       return "";
     }
