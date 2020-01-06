@@ -111,7 +111,7 @@ void paintCanvas(BuildContext context, Canvas canvas, double scale, Point transl
     ..strokeJoin = StrokeJoin.round;
 
   if (!hideGrid) {
-    paint.color = Colors.grey[200];
+    paint.color = Colors.grey[300];
 
     paint.strokeWidth = 10;
     canvas.drawPoints(ui.PointMode.points, <Offset>[Offset(0, 0)], paint);
@@ -280,7 +280,7 @@ class ScratchPaperState extends State<ScratchPaper> {
       ..style = PaintingStyle.fill
       ..color = Colors.white;
     canvas.drawRect(Rect.fromLTRB(0, 0, rightBottomPoint.dx, rightBottomPoint.dy), paint);
-    paintCanvas(context, canvas, 1, translate, _image, offset, strokes, null, ScratchMode.edit, null);
+    paintCanvas(context, canvas, 1, translate, _image, offset, strokes, null, ScratchMode.edit, null, hideGrid: true);
     final picture = recorder.endRecording();
     var image = await picture.toImage(rightBottomPoint.dx.toInt(), rightBottomPoint.dy.toInt());
     return image;
@@ -307,6 +307,10 @@ class ScratchPaperState extends State<ScratchPaper> {
   void saveGallery() async {
     if (_image == null && strokes.length <= 0) {
       showErrorToast(AppLocalizations.of(context).getLanguageText('contentEmpty'));
+      return;
+    }
+    Map<PermissionGroup, PermissionStatus> permissions = await PermissionHandler().requestPermissions([PermissionGroup.storage]);
+    if (permissions[PermissionGroup.storage] != PermissionStatus.granted) {
       return;
     }
     var image = await drawImage();
