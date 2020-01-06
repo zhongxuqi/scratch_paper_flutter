@@ -27,6 +27,9 @@ class AppLocalizations {
       'importWillClear': 'Import will clear all content',
       'shareWechat': 'Share to wechat',
       'cantShareEmpty': 'Can not share empty',
+      'save2Gallery': 'Save to gallery',
+      'saveSuccess': 'Saved success',
+      'contentEmpty': 'Content empty',
     },
     'zh': {
       'edit': '编辑',
@@ -43,6 +46,9 @@ class AppLocalizations {
       'importWillClear': '导入会清空所有内容',
       'shareWechat': '分享到微信',
       'cantShareEmpty': '无法分享空内容',
+      'save2Gallery': '保存到相册',
+      'saveSuccess': '保存相册',
+      'contentEmpty': '内容为空',
     }
   };
 

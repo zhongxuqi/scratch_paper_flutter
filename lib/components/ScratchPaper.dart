@@ -9,6 +9,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:path/path.dart' as path;
 import 'alert.dart';
 import 'Toast.dart';
+import 'package:image_gallery_saver/image_gallery_saver.dart';
 
 enum ScratchMode {
   edit,
@@ -63,6 +64,23 @@ class ScratchPaper extends StatefulWidget {
   ScratchPaperState createState() => ScratchPaperState();
 }
 
+void drawDash(Canvas canvas, Paint paint, Offset from, Offset to, double width) {
+  var path = Path();
+  var vec = (to - from) / (to - from).distance;
+  var prevLoc = from;
+  while ((prevLoc - from).distance < (to - from).distance) {
+    var nextLoc = prevLoc + vec * width;
+    if ((nextLoc - from).distance > (to - from).distance) {
+      nextLoc = to;
+    }
+    path.moveTo(prevLoc.dx, prevLoc.dy);
+    path.lineTo(nextLoc.dx, nextLoc.dy);
+    canvas.drawLine(prevLoc, nextLoc, paint);
+    prevLoc += vec * 2 * width;
+  }
+  canvas.drawPath(path, paint);
+}
+
 void drawStroke(Canvas canvas, Paint paint, Stroke stroke) {
   var path = Path()
     ..fillType = PathFillType.evenOdd;
@@ -79,14 +97,37 @@ void drawStroke(Canvas canvas, Paint paint, Stroke stroke) {
   canvas.drawPath(path, paint);
 }
 
-void paintCanvas(Canvas canvas, double scale, Point translate, ui.Image image, Offset offset, LinkedList<Stroke> strokes, Stroke currStroke, ScratchMode scratchMode, Point focalPoint) {
+void paintCanvas(BuildContext context, Canvas canvas, double scale, Point translate, ui.Image image, Offset offset, LinkedList<Stroke> strokes, Stroke currStroke, ScratchMode scratchMode, Point focalPoint, {bool hideGrid = false}) {
   canvas.scale(scale);
   canvas.translate(translate.x, translate.y);
+  canvas.clipRect(ui.Rect.fromPoints(
+    Offset(-translate.x, -translate.y),
+    Offset(-translate.x + MediaQuery.of(context).size.width / scale, -translate.y + MediaQuery.of(context).size.height / scale),
+  ));
   var paint = Paint()
     ..style = PaintingStyle.stroke
     ..isAntiAlias = true
     ..strokeCap = StrokeCap.round
     ..strokeJoin = StrokeJoin.round;
+
+  if (!hideGrid) {
+    paint.color = Colors.grey[200];
+
+    paint.strokeWidth = 10;
+    canvas.drawPoints(ui.PointMode.points, <Offset>[Offset(0, 0)], paint);
+
+    paint.strokeWidth = 1;
+
+    // draw horizontal lines
+    for (var i = (-translate.y + MediaQuery.of(context).size.height) ~/ MediaQuery.of(context).size.height; i * MediaQuery.of(context).size.height > -translate.y && i * MediaQuery.of(context).size.height < -translate.y + MediaQuery.of(context).size.height / scale; i++) {
+      drawDash(canvas, paint, Offset(-translate.x, i * MediaQuery.of(context).size.height), Offset(-translate.x + MediaQuery.of(context).size.width / scale, i * MediaQuery.of(context).size.height), 5);
+    }
+
+    // draw vertical lines
+    for (var i = (-translate.x + MediaQuery.of(context).size.width) ~/ MediaQuery.of(context).size.width; i * MediaQuery.of(context).size.width > -translate.x && i * MediaQuery.of(context).size.width < -translate.x + MediaQuery.of(context).size.width / scale; i++) {
+      drawDash(canvas, paint, Offset(i * MediaQuery.of(context).size.width, -translate.y), Offset(i * MediaQuery.of(context).size.width, -translate.y + MediaQuery.of(context).size.height / scale), 5);
+    }
+  }
 
   if (image != null) {
     canvas.drawImage(image, offset, paint);
@@ -131,8 +172,6 @@ class ScratchPaperState extends State<ScratchPaper> {
 
   void reset() {
     setState(() {
-      scale = 1;
-      translate = Point(x: 0, y: 0);
       strokes.clear();
       undoStrokes.clear();
       lastPoint = null;
@@ -195,7 +234,7 @@ class ScratchPaperState extends State<ScratchPaper> {
     });
   }
 
-  Future<ui.Image> _drawImage({bool belowMaxLen=false}) async {
+  Future<ui.Image> drawImage({bool belowMaxLen=false}) async {
     _leftTopBorder = null;
     _rightBottomBorder = null;
     if (_image != null) {
@@ -241,9 +280,10 @@ class ScratchPaperState extends State<ScratchPaper> {
       ..style = PaintingStyle.fill
       ..color = Colors.white;
     canvas.drawRect(Rect.fromLTRB(0, 0, rightBottomPoint.dx, rightBottomPoint.dy), paint);
-    paintCanvas(canvas, 1, translate, _image, offset, strokes, null, ScratchMode.edit, null);
+    paintCanvas(context, canvas, 1, translate, _image, offset, strokes, null, ScratchMode.edit, null);
     final picture = recorder.endRecording();
-    return await picture.toImage(rightBottomPoint.dx.toInt(), rightBottomPoint.dy.toInt());
+    var image = await picture.toImage(rightBottomPoint.dx.toInt(), rightBottomPoint.dy.toInt());
+    return image;
   }
 
   Future<String> export() async {
@@ -255,7 +295,7 @@ class ScratchPaperState extends State<ScratchPaper> {
     if (permissions[PermissionGroup.storage] != PermissionStatus.granted) {
       return "";
     }
-    final img = await _drawImage();
+    final img = await drawImage();
     final pngBytes = await img.toByteData(format: ui.ImageByteFormat.png);
     final externalDir = await getExternalStorageDirectory();
     final imageFilePath = path.join(externalDir.absolute.path, "scratch_paper_export.png");
@@ -264,11 +304,22 @@ class ScratchPaperState extends State<ScratchPaper> {
     return imageFilePath;
   }
 
+  void saveGallery() async {
+    if (_image == null && strokes.length <= 0) {
+      showErrorToast(AppLocalizations.of(context).getLanguageText('contentEmpty'));
+      return;
+    }
+    var image = await drawImage();
+    var imageByte = await image.toByteData();
+    await ImageGallerySaver.saveImage(imageByte.buffer.asUint8List());
+    showSuccessToast(AppLocalizations.of(context).getLanguageText('saveSuccess'));
+  }
+
   void _checkStrokes() async {
     if (strokes.length < 2 * maxStrokesLens) return;
     if (isCheckingStrokes) return;
     isCheckingStrokes = true;
-    _image = await _drawImage(belowMaxLen: true);
+    _image = await drawImage(belowMaxLen: true);
     offset = _leftTopBorder;
     for (var i=0;i<maxStrokesLens;i++) {
       strokes.remove(strokes.first);
@@ -351,6 +402,7 @@ class ScratchPaperState extends State<ScratchPaper> {
         },
         child: CustomPaint(
           painter: ScratchPainter(
+            context: context,
             scratchMode: widget.scratchMode,
             image: _image,
             offset: offset,
@@ -389,6 +441,7 @@ class Stroke extends LinkedListEntry<Stroke> {
 }
 
 class ScratchPainter extends CustomPainter {
+  final BuildContext context;
   final ScratchMode scratchMode;
   final ui.Image image;
   final Offset offset;
@@ -398,11 +451,21 @@ class ScratchPainter extends CustomPainter {
   final double scale;
   final Point focalPoint;
 
-  ScratchPainter({@required this.scratchMode, @required this.image, @required this.offset, @required this.strokes, @required this.currStroke, @required this.translate, @required this.scale, @required this.focalPoint});
+  ScratchPainter({
+    @required this.context,
+    @required this.scratchMode,
+    @required this.image,
+    @required this.offset,
+    @required this.strokes,
+    @required this.currStroke,
+    @required this.translate,
+    @required this.scale,
+    @required this.focalPoint,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
-    paintCanvas(canvas, scale, translate, image, offset, strokes, currStroke, scratchMode, focalPoint);
+    paintCanvas(context, canvas, scale, translate, image, offset, strokes, currStroke, scratchMode, focalPoint);
   }
 
   @override

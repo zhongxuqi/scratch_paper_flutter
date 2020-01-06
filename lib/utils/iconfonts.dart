@@ -19,4 +19,5 @@ class IconFonts {
   static const IconData lineWeight = IconData(0xed3f, fontFamily: 'iconfont');
   static const IconData location = IconData(0xe62e, fontFamily: 'iconfont');
   static const IconData wechat = IconData(0xe63b, fontFamily: 'iconfont');
+  static const IconData gallery = IconData(0xe98a, fontFamily: 'iconfont');
 }

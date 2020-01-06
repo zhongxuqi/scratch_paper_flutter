@@ -30,6 +30,7 @@ dependencies:
   path_provider: ^1.5.1
   multi_image_picker: ^4.5.9
   fluwx: ^1.2.1+1
+  image_gallery_saver: ^1.2.2
 
 dev_dependencies:
   flutter_test:

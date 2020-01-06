@@ -334,6 +334,9 @@ class _MainPageState extends State<MainPage> {
                                     _scratchPaperState.currentState.image = image;
                                   });
                                   break;
+                                case MoreAction.gallery:
+                                  _scratchPaperState.currentState.saveGallery()
+                                  break;
                                 case MoreAction.wechat:
                                   var imageFilePath = await _scratchPaperState.currentState.export();
                                   if (imageFilePath != "") {
@@ -346,7 +349,7 @@ class _MainPageState extends State<MainPage> {
                               }
                             },
                             itemBuilder: (BuildContext context) {
-                              return <MoreAction>[MoreAction.backOrigin, MoreAction.clear, MoreAction.import, MoreAction.export, MoreAction.wechat].map((item) {
+                              return <MoreAction>[MoreAction.backOrigin, MoreAction.clear, MoreAction.import, MoreAction.export, MoreAction.gallery, MoreAction.wechat].map((item) {
                                 return PopupMenuItem<MoreAction>(
                                   value: item,
                                   child: Row(
@@ -391,6 +394,7 @@ enum MoreAction {
   clear,
   import,
   export,
+  gallery,
   wechat,
 }
 
@@ -404,6 +408,8 @@ IconData MoreAction2Icon(MoreAction action) {
       return IconFonts.import;
     case MoreAction.export:
       return IconFonts.export;
+    case MoreAction.gallery:
+      return IconFonts.gallery;
     case MoreAction.wechat:
       return IconFonts.wechat;
   }
@@ -420,6 +426,8 @@ String MoreAction2Desc(BuildContext context, MoreAction action) {
       return AppLocalizations.of(context).getLanguageText('import');
     case MoreAction.export:
       return AppLocalizations.of(context).getLanguageText('export');
+    case MoreAction.gallery:
+      return AppLocalizations.of(context).getLanguageText('save2Gallery');
     case MoreAction.wechat:
       return AppLocalizations.of(context).getLanguageText('shareWechat');
   }
