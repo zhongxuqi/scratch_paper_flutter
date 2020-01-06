@@ -335,7 +335,7 @@ class _MainPageState extends State<MainPage> {
                                   });
                                   break;
                                 case MoreAction.gallery:
-                                  _scratchPaperState.currentState.saveGallery()
+                                  _scratchPaperState.currentState.saveGallery();
                                   break;
                                 case MoreAction.wechat:
                                   var imageFilePath = await _scratchPaperState.currentState.export();
