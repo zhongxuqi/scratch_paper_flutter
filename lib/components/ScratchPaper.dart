@@ -97,7 +97,7 @@ void drawStroke(Canvas canvas, Paint paint, Stroke stroke) {
   canvas.drawPath(path, paint);
 }
 
-void paintCanvas(BuildContext context, Canvas canvas, double scale, Point translate, ui.Image image, Offset offset, LinkedList<Stroke> strokes, Stroke currStroke, ScratchMode scratchMode, Point focalPoint, {bool hideGrid = false}) {
+void paintCanvas(BuildContext context, Canvas canvas, double scale, Point translate, ui.Image image, Offset offset, LinkedList<Stroke> strokes, Stroke currStroke, ScratchMode scratchMode, Point focalPoint) {
   canvas.scale(scale);
   canvas.translate(translate.x, translate.y);
   canvas.clipRect(ui.Rect.fromPoints(
@@ -110,22 +110,23 @@ void paintCanvas(BuildContext context, Canvas canvas, double scale, Point transl
     ..strokeCap = StrokeCap.round
     ..strokeJoin = StrokeJoin.round;
 
-  if (!hideGrid) {
-    paint.color = Colors.grey[300];
+  if (scratchMode == ScratchMode.move) {
+    paint.color = Colors.grey[400];
 
-    paint.strokeWidth = 10;
+    paint.strokeWidth = 10 / scale;
     canvas.drawPoints(ui.PointMode.points, <Offset>[Offset(0, 0)], paint);
 
-    paint.strokeWidth = 1;
+    paint.strokeWidth = 1 / scale;
+    final width = 5 / scale;
 
     // draw horizontal lines
-    for (var i = (-translate.y + MediaQuery.of(context).size.height) ~/ MediaQuery.of(context).size.height; i * MediaQuery.of(context).size.height > -translate.y && i * MediaQuery.of(context).size.height < -translate.y + MediaQuery.of(context).size.height / scale; i++) {
-      drawDash(canvas, paint, Offset(-translate.x, i * MediaQuery.of(context).size.height), Offset(-translate.x + MediaQuery.of(context).size.width / scale, i * MediaQuery.of(context).size.height), 5);
+    for (var i = -translate.y.toInt() ~/ MediaQuery.of(context).size.height; i * MediaQuery.of(context).size.height > -translate.y && i * MediaQuery.of(context).size.height < -translate.y + MediaQuery.of(context).size.height / scale; i++) {
+      drawDash(canvas, paint, Offset(-translate.x, i * MediaQuery.of(context).size.height), Offset(-translate.x + MediaQuery.of(context).size.width / scale, i * MediaQuery.of(context).size.height), width);
     }
 
     // draw vertical lines
-    for (var i = (-translate.x + MediaQuery.of(context).size.width) ~/ MediaQuery.of(context).size.width; i * MediaQuery.of(context).size.width > -translate.x && i * MediaQuery.of(context).size.width < -translate.x + MediaQuery.of(context).size.width / scale; i++) {
-      drawDash(canvas, paint, Offset(i * MediaQuery.of(context).size.width, -translate.y), Offset(i * MediaQuery.of(context).size.width, -translate.y + MediaQuery.of(context).size.height / scale), 5);
+    for (var i = -translate.x.toInt() ~/ MediaQuery.of(context).size.width; i * MediaQuery.of(context).size.width > -translate.x && i * MediaQuery.of(context).size.width < -translate.x + MediaQuery.of(context).size.width / scale; i++) {
+      drawDash(canvas, paint, Offset(i * MediaQuery.of(context).size.width, -translate.y), Offset(i * MediaQuery.of(context).size.width, -translate.y + MediaQuery.of(context).size.height / scale), width);
     }
   }
 
@@ -150,7 +151,8 @@ void paintCanvas(BuildContext context, Canvas canvas, double scale, Point transl
 }
 
 class ScratchPaperState extends State<ScratchPaper> {
-  final maxStrokesLens = 10;
+  final maxStrokesLen = 10;
+  final double minScale = 0.1;
   final LinkedList<Stroke> strokes = LinkedList<Stroke>();
   final LinkedList<Stroke> undoStrokes = LinkedList<Stroke>();
   bool isCheckingStrokes = false;
@@ -244,7 +246,7 @@ class ScratchPaperState extends State<ScratchPaper> {
     LinkedList<Stroke> _strokes;
     if (belowMaxLen) {
       _strokes = LinkedList<Stroke>();
-      for(var i=0;i<maxStrokesLens;i++) {
+      for(var i=0;i<maxStrokesLen;i++) {
         _strokes.add(strokes.elementAt(i).clone());
       }
     } else {
@@ -280,10 +282,9 @@ class ScratchPaperState extends State<ScratchPaper> {
       ..style = PaintingStyle.fill
       ..color = Colors.white;
     canvas.drawRect(Rect.fromLTRB(0, 0, rightBottomPoint.dx, rightBottomPoint.dy), paint);
-    paintCanvas(context, canvas, 1, translate, _image, offset, strokes, null, ScratchMode.edit, null, hideGrid: true);
+    paintCanvas(context, canvas, 1, translate, _image, offset, strokes, null, ScratchMode.edit, null);
     final picture = recorder.endRecording();
-    var image = await picture.toImage(rightBottomPoint.dx.toInt(), rightBottomPoint.dy.toInt());
-    return image;
+    return await picture.toImage(rightBottomPoint.dx.toInt(), rightBottomPoint.dy.toInt());
   }
 
   Future<String> export() async {
@@ -320,12 +321,12 @@ class ScratchPaperState extends State<ScratchPaper> {
   }
 
   void _checkStrokes() async {
-    if (strokes.length < 2 * maxStrokesLens) return;
+    if (strokes.length < 2 * maxStrokesLen) return;
     if (isCheckingStrokes) return;
     isCheckingStrokes = true;
     _image = await drawImage(belowMaxLen: true);
     offset = _leftTopBorder;
-    for (var i=0;i<maxStrokesLens;i++) {
+    for (var i=0;i<maxStrokesLen;i++) {
       strokes.remove(strokes.first);
     }
     isCheckingStrokes = false;
@@ -375,16 +376,21 @@ class ScratchPaperState extends State<ScratchPaper> {
               break;
             case ScratchMode.move:
               var factor = details.scale / lastScale;
-              scale = scale * factor;
-              lastScale = details.scale;
+              if (scale * factor < minScale) {
+                factor = 1;
+                scale = minScale;
+                lastScale = minScale;
+              } else {
+                scale = scale * factor;
+                lastScale = details.scale;
+              }
 
               var currPoint = Point(x: details.localFocalPoint.dx, y: details.localFocalPoint.dy);
               translate = Point(
-                  x: translate.x + (currPoint.x - lastPoint.x) / scale - details.localFocalPoint.dx * (factor - 1) / scale,
-                  y: translate.y + (currPoint.y - lastPoint.y) / scale - details.localFocalPoint.dy * (factor - 1) / scale,
+                x: translate.x + (currPoint.x - lastPoint.x) / scale - details.localFocalPoint.dx * (factor - 1) / scale,
+                y: translate.y + (currPoint.y - lastPoint.y) / scale - details.localFocalPoint.dy * (factor - 1) / scale,
               );
               lastPoint = currPoint;
-
               setState(() {});
               break;
           }
