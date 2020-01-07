@@ -97,13 +97,24 @@ void drawStroke(Canvas canvas, Paint paint, Stroke stroke) {
   canvas.drawPath(path, paint);
 }
 
-void paintCanvas(BuildContext context, Canvas canvas, double scale, Point translate, ui.Image image, Offset offset, LinkedList<Stroke> strokes, Stroke currStroke, ScratchMode scratchMode, Point focalPoint) {
+void paintCanvas(BuildContext context, Canvas canvas, double scale, Point translate, ui.Image image, Offset offset, LinkedList<Stroke> strokes, Stroke currStroke, ScratchMode scratchMode, Point focalPoint, {bool disableClipRect = false}) {
   canvas.scale(scale);
   canvas.translate(translate.x, translate.y);
-  canvas.clipRect(ui.Rect.fromPoints(
-    Offset(-translate.x, -translate.y - MediaQuery.of(context).padding.top / scale),
-    Offset(-translate.x + MediaQuery.of(context).size.width / scale, -translate.y + MediaQuery.of(context).size.height / scale),
-  ));
+  if (!disableClipRect) {
+    canvas.clipRect(ui.Rect.fromPoints(
+      Offset(-translate.x, -translate.y - MediaQuery
+          .of(context)
+          .padding
+          .top / scale),
+      Offset(-translate.x + MediaQuery
+          .of(context)
+          .size
+          .width / scale, -translate.y + MediaQuery
+          .of(context)
+          .size
+          .height / scale),
+    ));
+  }
   var paint = Paint()
     ..style = PaintingStyle.stroke
     ..isAntiAlias = true
@@ -282,7 +293,7 @@ class ScratchPaperState extends State<ScratchPaper> {
       ..style = PaintingStyle.fill
       ..color = Colors.white;
     canvas.drawRect(Rect.fromLTRB(0, 0, rightBottomPoint.dx, rightBottomPoint.dy), paint);
-    paintCanvas(context, canvas, 1, translate, _image, offset, strokes, null, ScratchMode.edit, null);
+    paintCanvas(context, canvas, 1, translate, _image, offset, _strokes, null, ScratchMode.edit, null, disableClipRect: true);
     final picture = recorder.endRecording();
     return await picture.toImage(rightBottomPoint.dx.toInt(), rightBottomPoint.dy.toInt());
   }

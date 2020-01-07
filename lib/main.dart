@@ -11,6 +11,7 @@ import 'package:flutter_share/flutter_share.dart';
 import 'package:fluwx/fluwx.dart' as fluwx;
 import 'package:multi_image_picker/multi_image_picker.dart';
 import 'dart:ui' as ui;
+import 'package:permission_handler/permission_handler.dart';
 
 void main() => runApp(MyApp());
 
@@ -319,6 +320,10 @@ class _MainPageState extends State<MainPage> {
                                   _scratchPaperState.currentState.reset();
                                   break;
                                 case MoreAction.import:
+                                  Map<PermissionGroup, PermissionStatus> permissions = await PermissionHandler().requestPermissions([PermissionGroup.storage, PermissionGroup.camera]);
+                                  if (permissions[PermissionGroup.storage] != PermissionStatus.granted || permissions[PermissionGroup.camera] != PermissionStatus.granted) {
+                                    return;
+                                  }
                                   List<Asset> resultList = List<Asset>();
                                   try {
                                     resultList = await MultiImagePicker.pickImages(
@@ -327,6 +332,7 @@ class _MainPageState extends State<MainPage> {
                                     );
                                   } on Exception catch (e) {
                                     print(e.toString());
+                                    return;
                                   }
                                   if (!mounted) return;
                                   if (resultList.length <= 0) return;
