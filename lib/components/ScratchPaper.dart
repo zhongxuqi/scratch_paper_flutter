@@ -101,7 +101,7 @@ void paintCanvas(BuildContext context, Canvas canvas, double scale, Point transl
   canvas.scale(scale);
   canvas.translate(translate.x, translate.y);
   canvas.clipRect(ui.Rect.fromPoints(
-    Offset(-translate.x, -translate.y),
+    Offset(-translate.x, -translate.y - MediaQuery.of(context).padding.top / scale),
     Offset(-translate.x + MediaQuery.of(context).size.width / scale, -translate.y + MediaQuery.of(context).size.height / scale),
   ));
   var paint = Paint()
@@ -120,12 +120,12 @@ void paintCanvas(BuildContext context, Canvas canvas, double scale, Point transl
     final width = 5 / scale;
 
     // draw horizontal lines
-    for (var i = -translate.y.toInt() ~/ MediaQuery.of(context).size.height; i * MediaQuery.of(context).size.height > -translate.y && i * MediaQuery.of(context).size.height < -translate.y + MediaQuery.of(context).size.height / scale; i++) {
+    for (var i = translate.y > 0 ?  - (translate.y.toInt() ~/ MediaQuery.of(context).size.height) : 1 + (-translate.y).toInt() ~/ MediaQuery.of(context).size.height; i * MediaQuery.of(context).size.height > -translate.y && i * MediaQuery.of(context).size.height < -translate.y + MediaQuery.of(context).size.height / scale; i++) {
       drawDash(canvas, paint, Offset(-translate.x, i * MediaQuery.of(context).size.height), Offset(-translate.x + MediaQuery.of(context).size.width / scale, i * MediaQuery.of(context).size.height), width);
     }
 
     // draw vertical lines
-    for (var i = -translate.x.toInt() ~/ MediaQuery.of(context).size.width; i * MediaQuery.of(context).size.width > -translate.x && i * MediaQuery.of(context).size.width < -translate.x + MediaQuery.of(context).size.width / scale; i++) {
+    for (var i = translate.x > 0 ?  - (translate.x.toInt() ~/ MediaQuery.of(context).size.width) : 1 + (-translate.x).toInt() ~/ MediaQuery.of(context).size.width; i * MediaQuery.of(context).size.width > -translate.x && i * MediaQuery.of(context).size.width < -translate.x + MediaQuery.of(context).size.width / scale; i++) {
       drawDash(canvas, paint, Offset(i * MediaQuery.of(context).size.width, -translate.y), Offset(i * MediaQuery.of(context).size.width, -translate.y + MediaQuery.of(context).size.height / scale), width);
     }
   }
@@ -379,11 +379,10 @@ class ScratchPaperState extends State<ScratchPaper> {
               if (scale * factor < minScale) {
                 factor = 1;
                 scale = minScale;
-                lastScale = minScale;
               } else {
                 scale = scale * factor;
-                lastScale = details.scale;
               }
+              lastScale = details.scale;
 
               var currPoint = Point(x: details.localFocalPoint.dx, y: details.localFocalPoint.dy);
               translate = Point(
