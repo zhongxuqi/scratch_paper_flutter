@@ -47,7 +47,7 @@ class AppLocalizations {
       'shareWechat': '分享到微信',
       'cantShareEmpty': '无法分享空内容',
       'save2Gallery': '保存到相册',
-      'saveSuccess': '保存相册',
+      'saveSuccess': '保存成功',
       'contentEmpty': '内容为空',
     }
   };

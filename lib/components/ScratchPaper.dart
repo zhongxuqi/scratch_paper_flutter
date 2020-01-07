@@ -314,9 +314,9 @@ class ScratchPaperState extends State<ScratchPaper> {
     if (permissions[PermissionGroup.storage] != PermissionStatus.granted) {
       return;
     }
-    var image = await drawImage();
-    var imageByte = await image.toByteData();
-    await ImageGallerySaver.saveImage(imageByte.buffer.asUint8List());
+    var img = await drawImage();
+    final pngBytes = await img.toByteData(format: ui.ImageByteFormat.png);
+    await ImageGallerySaver.saveImage(pngBytes.buffer.asUint8List());
     showSuccessToast(AppLocalizations.of(context).getLanguageText('saveSuccess'));
   }
 
