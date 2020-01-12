@@ -7,11 +7,12 @@ import '../utils/language.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:path/path.dart' as path;
-import 'alert.dart';
+import 'alertDialog.dart';
 import 'Toast.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 
 enum ScratchMode {
+  unknow,
   edit,
   move,
   eraser,
@@ -19,6 +20,8 @@ enum ScratchMode {
 
 IconData ScratchMode2Icon(ScratchMode mode) {
   switch (mode) {
+    case ScratchMode.unknow:
+      return IconFonts.edit;
     case ScratchMode.edit:
       return IconFonts.edit;
     case ScratchMode.move:
@@ -31,6 +34,8 @@ IconData ScratchMode2Icon(ScratchMode mode) {
 
 String ScratchMode2Desc(BuildContext context, ScratchMode mode) {
   switch (mode) {
+    case ScratchMode.unknow:
+      return "";
     case ScratchMode.edit:
       return AppLocalizations.of(context).getLanguageText('edit');
     case ScratchMode.move:
@@ -43,6 +48,8 @@ String ScratchMode2Desc(BuildContext context, ScratchMode mode) {
 
 Color ScratchMode2Color(ScratchMode mode) {
   switch (mode) {
+    case ScratchMode.unknow:
+      return Colors.black;
     case ScratchMode.edit:
       return Colors.green;
     case ScratchMode.move:
@@ -57,11 +64,14 @@ class ScratchPaper extends StatefulWidget {
   final ScratchMode scratchMode;
   final Color selectedColor;
   final double selectedLineWeight;
+  final ValueChanged<ScratchMode> modeChanged;
 
-  ScratchPaper({Key key, @required this.scratchMode, @required this.selectedColor, @required this.selectedLineWeight}): super(key: key);
+  ScratchPaper({Key key, @required this.scratchMode, @required this.selectedColor, @required this.selectedLineWeight, @required this.modeChanged}): super(key: key);
 
   @override
-  ScratchPaperState createState() => ScratchPaperState();
+  ScratchPaperState createState() => ScratchPaperState(
+    modeChanged: modeChanged,
+  );
 }
 
 void drawDash(Canvas canvas, Paint paint, Offset from, Offset to, double width) {
@@ -175,6 +185,10 @@ class ScratchPaperState extends State<ScratchPaper> {
   double scale = 1;
   double lastScale = 1;
   Offset _leftTopBorder, _rightBottomBorder;
+  ScratchMode nextMode = ScratchMode.unknow;
+  final ValueChanged<ScratchMode> modeChanged;
+
+  ScratchPaperState({@required this.modeChanged});
 
   void backOrigin() {
     setState(() {
@@ -349,7 +363,11 @@ class ScratchPaperState extends State<ScratchPaper> {
       color: Colors.white,
       child: GestureDetector(
         onScaleStart: (details) {
+          lastScale = 1;
+          lastPoint = Point(x: details.localFocalPoint.dx, y: details.localFocalPoint.dy);
           switch (widget.scratchMode) {
+            case ScratchMode.unknow:
+              break;
             case ScratchMode.eraser:
               currStroke = Stroke(
                 points: LinkedList<Point>()..add(Point(
@@ -359,7 +377,6 @@ class ScratchPaperState extends State<ScratchPaper> {
                 color: Colors.white,
                 lineWeight: widget.selectedLineWeight,
               );
-              lastPoint = Point(x: details.localFocalPoint.dx, y: details.localFocalPoint.dy);
               break;
             case ScratchMode.edit:
               currStroke = Stroke(
@@ -372,15 +389,20 @@ class ScratchPaperState extends State<ScratchPaper> {
               );
               break;
             case ScratchMode.move:
-              lastPoint = Point(x: details.localFocalPoint.dx, y: details.localFocalPoint.dy);
-              lastScale = 1;
               break;
           }
         },
         onScaleUpdate: (details) {
           switch (widget.scratchMode) {
+            case ScratchMode.unknow:
+              break;
             case ScratchMode.eraser:
             case ScratchMode.edit:
+              if (details.scale != 1) {
+                nextMode = widget.scratchMode;
+                modeChanged(ScratchMode.move);
+                break;
+              }
               currStroke.points.add(Point(x: -translate.x + details.localFocalPoint.dx / scale, y: -translate.y + details.localFocalPoint.dy / scale));
               lastPoint = Point(x: details.localFocalPoint.dx, y: details.localFocalPoint.dy);
               setState(() {});
@@ -407,17 +429,23 @@ class ScratchPaperState extends State<ScratchPaper> {
         },
         onScaleEnd: (details) {
           switch (widget.scratchMode) {
+            case ScratchMode.unknow:
+              break;
             case ScratchMode.eraser:
             case ScratchMode.edit:
               strokes.add(currStroke);
               undoStrokes.clear();
-              currStroke = null;
-              lastPoint = null;
-              setState(() {});
               _checkStrokes();
               break;
             case ScratchMode.move:
               break;
+          }
+          currStroke = null;
+          lastPoint = null;
+          setState(() {});
+          if (nextMode != ScratchMode.unknow) {
+            modeChanged(nextMode);
+            nextMode = ScratchMode.unknow;
           }
         },
         child: CustomPaint(

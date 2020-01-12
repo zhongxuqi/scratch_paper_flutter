@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:scratch_paper_flutter/utils/iconfonts.dart';
 import './components/ScratchPaper.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -12,6 +13,7 @@ import 'package:fluwx/fluwx.dart' as fluwx;
 import 'package:multi_image_picker/multi_image_picker.dart';
 import 'dart:ui' as ui;
 import 'package:permission_handler/permission_handler.dart';
+import 'components/alertDialog.dart';
 
 void main() => runApp(MyApp());
 
@@ -107,288 +109,306 @@ class _MainPageState extends State<MainPage> {
         appId: "wx27f355795896793b", doOnAndroid: true, doOnIOS: true);
   }
 
+  Future<bool> _onWillPop(){
+    if (_scratchPaperState.currentState != null && _scratchPaperState.currentState.strokes.length > 0) {
+      showAlertDialog(context, AppLocalizations.of(context).getLanguageText('exitAlert'), callback: () {
+        SystemNavigator.pop();
+      });
+      return Future.value(false);
+    }
+    return Future.value(true);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Padding(
-        padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
-        child: Stack(
-          children: <Widget>[
-            Positioned(
-              left: 0,
-              top: 0,
-              right: 0,
-              bottom: 0,
-              child: ScratchPaper(
-                key: _scratchPaperState,
-                scratchMode: scratchMode,
-                selectedColor: selectedColor,
-                selectedLineWeight: scratchMode==ScratchMode.eraser?eraserSelectedLineWeight:selectedLineWeight,
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: Padding(
+          padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+          child: Stack(
+            children: <Widget>[
+              Positioned(
+                left: 0,
+                top: 0,
+                right: 0,
+                bottom: 0,
+                child: ScratchPaper(
+                  key: _scratchPaperState,
+                  scratchMode: scratchMode,
+                  selectedColor: selectedColor,
+                  selectedLineWeight: scratchMode==ScratchMode.eraser?eraserSelectedLineWeight:selectedLineWeight,
+                  modeChanged: (newMode) {
+                    setState(() {
+                      scratchMode = newMode;
+                    });
+                  },
+                ),
               ),
-            ),
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: Container(
-                margin: EdgeInsets.all(10),
-                child: Row(
-                  children: <Widget>[
-                    PopupMenuButton<ScratchMode>(
-                      initialValue: scratchMode,
-                      child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: Container(
+                  margin: EdgeInsets.all(10),
+                  child: Row(
+                    children: <Widget>[
+                      PopupMenuButton<ScratchMode>(
+                        initialValue: scratchMode,
+                        child: Container(
+                          padding: EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: ScratchMode2Color(scratchMode),
+                            borderRadius: BorderRadius.all(Radius.circular(999)),
+                          ),
+                          child: Row(
+                            children: <Widget>[
+                              Container(
+                                child: Icon(
+                                  ScratchMode2Icon(scratchMode),
+                                  color: Colors.white,
+                                  size: 26,
+                                ),
+                              ),
+                              Container(
+                                child: Icon(
+                                  IconFonts.dropdown,
+                                  color: Colors.white,
+                                  size: 26,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        onSelected: (ScratchMode result) { setState(() { scratchMode = result; }); },
+                        itemBuilder: (BuildContext context) {
+                          return scratchModes.map((item) {
+                            return PopupMenuItem<ScratchMode>(
+                              value: item,
+                              child: Row(
+                                children: <Widget>[
+                                  Container(
+                                    margin: EdgeInsets.only(right: 10),
+                                    child: Icon(
+                                      ScratchMode2Icon(item),
+                                      color: Colors.black,
+                                      size: 24,
+                                    ),
+                                  ),
+                                  Text(
+                                    ScratchMode2Desc(context, item),
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 15,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }).toList();
+                        },
+                      ),
+                      Expanded(
+                        flex: 1,
+                        child: Container(),
+                      ),
+                      Container(
                         decoration: BoxDecoration(
-                          color: ScratchMode2Color(scratchMode),
+                          color: Colors.white,
+                          border: Border.all(color: Colors.grey[100]),
                           borderRadius: BorderRadius.all(Radius.circular(999)),
                         ),
                         child: Row(
                           children: <Widget>[
-                            Container(
-                              child: Icon(
-                                ScratchMode2Icon(scratchMode),
-                                color: Colors.white,
-                                size: 26,
+                            IconButton(
+                              icon: Icon(
+                                IconFonts.colors,
+                                size: 24,
+                                color: selectedColor,
                               ),
+                              onPressed: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return SimpleDialog(
+                                      contentPadding: EdgeInsets.all(0),
+                                      children: <Widget>[
+                                        Container(
+                                          constraints: BoxConstraints(
+                                            maxHeight: MediaQuery.of(context).size.height / 2,
+                                          ),
+                                          child: MaterialColorPicker(
+                                            allowShades: false,
+                                            onMainColorChange: (Color color) {
+                                              setState(() {
+                                                selectedColor = color;
+                                              });
+                                              Navigator.of(context).pop();
+                                            },
+                                            selectedColor: selectedColor,
+                                            colors: colors,
+                                          ),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+                              },
                             ),
-                            Container(
-                              child: Icon(
-                                IconFonts.dropdown,
-                                color: Colors.white,
-                                size: 26,
+                            IconButton(
+                              icon: Icon(IconFonts.lineWeight,size: 24,),
+                              onPressed: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return SimpleDialog(
+                                      contentPadding: EdgeInsets.all(0),
+                                      children: <Widget>[
+                                        Container(
+                                          child: LineWeightPicker(
+                                            selectedColor: selectedColor,
+                                            lineWeight: scratchMode==ScratchMode.eraser?eraserSelectedLineWeight:selectedLineWeight,
+                                            onValue: (newValue) {
+                                              if (scratchMode == ScratchMode.eraser) {
+                                                setState(() {
+                                                  eraserSelectedLineWeight = newValue;
+                                                });
+                                              } else {
+                                                setState(() {
+                                                  selectedLineWeight = newValue;
+                                                });
+                                              }
+                                              Navigator.of(context).pop();
+                                            },
+                                            lineWeights: scratchMode==ScratchMode.eraser?eraserLineWeights:lineWeights,
+                                          ),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+                              },
+                            ),
+                            IconButton(
+                              icon: Icon(IconFonts.undo,size: 24,),
+                              onPressed: () {
+                                if (_scratchPaperState.currentState == null || !_scratchPaperState.currentState.undo()) {
+                                  showErrorToast(AppLocalizations.of(context).getLanguageText('noMoreUndo'));
+                                }
+                              },
+                            ),
+                            IconButton(
+                              icon: Icon(IconFonts.redo,size: 24,),
+                              onPressed: () {
+                                if (_scratchPaperState.currentState == null || !_scratchPaperState.currentState.redo()) {
+                                  showErrorToast(AppLocalizations.of(context).getLanguageText('noMoreRedo'));
+                                }
+                              },
+                            ),
+                            PopupMenuButton<MoreAction>(
+                              padding: EdgeInsets.all(0),
+                              child: Container(
+                                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.all(Radius.circular(999)),
+                                ),
+                                child: Icon(
+                                  IconFonts.more,
+                                  color: Colors.black,
+                                  size: 22,
+                                ),
                               ),
+                              onSelected: (MoreAction result) async {
+                                if (_scratchPaperState.currentState == null) return;
+                                switch (result) {
+                                  case MoreAction.backOrigin:
+                                    _scratchPaperState.currentState.backOrigin();
+                                    break;
+                                  case MoreAction.export:
+                                    var imageFilePath = await _scratchPaperState.currentState.export();
+                                    if (imageFilePath != "") {
+                                      await FlutterShare.shareFile(
+                                        title: 'ScratchPaper',
+                                        filePath: imageFilePath,
+                                      );
+                                    }
+                                    break;
+                                  case MoreAction.clear:
+                                    _scratchPaperState.currentState.reset();
+                                    break;
+                                  case MoreAction.import:
+                                    Map<PermissionGroup, PermissionStatus> permissions = await PermissionHandler().requestPermissions([PermissionGroup.storage, PermissionGroup.camera]);
+                                    if (permissions[PermissionGroup.storage] != PermissionStatus.granted || permissions[PermissionGroup.camera] != PermissionStatus.granted) {
+                                      return;
+                                    }
+                                    List<Asset> resultList = List<Asset>();
+                                    try {
+                                      resultList = await MultiImagePicker.pickImages(
+                                        maxImages: 1,
+                                        enableCamera: true,
+                                      );
+                                    } on Exception catch (e) {
+                                      print(e.toString());
+                                      return;
+                                    }
+                                    if (!mounted) return;
+                                    if (resultList.length <= 0) return;
+                                    ui.decodeImageFromList((await resultList[0].getByteData()).buffer.asUint8List(), (image) {
+                                      _scratchPaperState.currentState.image = image;
+                                    });
+                                    break;
+                                  case MoreAction.gallery:
+                                    _scratchPaperState.currentState.saveGallery();
+                                    break;
+                                  case MoreAction.wechat:
+                                    var imageFilePath = await _scratchPaperState.currentState.export();
+                                    if (imageFilePath != "") {
+                                      fluwx.shareToWeChat(fluwx.WeChatShareImageModel(
+                                        image: "file://$imageFilePath",
+                                        scene: fluwx.WeChatScene.SESSION,
+                                      ));
+                                    }
+                                    break;
+                                }
+                              },
+                              itemBuilder: (BuildContext context) {
+                                return <MoreAction>[MoreAction.backOrigin, MoreAction.clear, MoreAction.import, MoreAction.export, MoreAction.gallery, MoreAction.wechat].map((item) {
+                                  return PopupMenuItem<MoreAction>(
+                                    value: item,
+                                    child: Row(
+                                      children: <Widget>[
+                                        Container(
+                                          margin: EdgeInsets.only(right: 10),
+                                          child: Icon(
+                                            MoreAction2Icon(item),
+                                            color: Colors.black,
+                                            size: 24,
+                                          ),
+                                        ),
+                                        Text(
+                                          MoreAction2Desc(context, item),
+                                          style: TextStyle(
+                                            color: Colors.black,
+                                            fontSize: 15,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }).toList();
+                              },
                             ),
                           ],
                         ),
                       ),
-                      onSelected: (ScratchMode result) { setState(() { scratchMode = result; }); },
-                      itemBuilder: (BuildContext context) {
-                        return scratchModes.map((item) {
-                          return PopupMenuItem<ScratchMode>(
-                            value: item,
-                            child: Row(
-                              children: <Widget>[
-                                Container(
-                                  margin: EdgeInsets.only(right: 10),
-                                  child: Icon(
-                                    ScratchMode2Icon(item),
-                                    color: Colors.black,
-                                    size: 24,
-                                  ),
-                                ),
-                                Text(
-                                  ScratchMode2Desc(context, item),
-                                  style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 15,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }).toList();
-                      },
-                    ),
-                    Expanded(
-                      flex: 1,
-                      child: Container(),
-                    ),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border.all(color: Colors.grey[100]),
-                        borderRadius: BorderRadius.all(Radius.circular(999)),
-                      ),
-                      child: Row(
-                        children: <Widget>[
-                          IconButton(
-                            icon: Icon(
-                              IconFonts.colors,
-                              size: 24,
-                              color: selectedColor,
-                            ),
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder: (BuildContext context) {
-                                  return SimpleDialog(
-                                    contentPadding: EdgeInsets.all(0),
-                                    children: <Widget>[
-                                      Container(
-                                        constraints: BoxConstraints(
-                                          maxHeight: MediaQuery.of(context).size.height / 2,
-                                        ),
-                                        child: MaterialColorPicker(
-                                          allowShades: false,
-                                          onMainColorChange: (Color color) {
-                                            setState(() {
-                                              selectedColor = color;
-                                            });
-                                            Navigator.of(context).pop();
-                                          },
-                                          selectedColor: selectedColor,
-                                          colors: colors,
-                                        ),
-                                      ),
-                                    ],
-                                  );
-                                },
-                              );
-                            },
-                          ),
-                          IconButton(
-                            icon: Icon(IconFonts.lineWeight,size: 24,),
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder: (BuildContext context) {
-                                  return SimpleDialog(
-                                    contentPadding: EdgeInsets.all(0),
-                                    children: <Widget>[
-                                      Container(
-                                        child: LineWeightPicker(
-                                          selectedColor: selectedColor,
-                                          lineWeight: scratchMode==ScratchMode.eraser?eraserSelectedLineWeight:selectedLineWeight,
-                                          onValue: (newValue) {
-                                            if (scratchMode == ScratchMode.eraser) {
-                                              setState(() {
-                                                eraserSelectedLineWeight = newValue;
-                                              });
-                                            } else {
-                                              setState(() {
-                                                selectedLineWeight = newValue;
-                                              });
-                                            }
-                                            Navigator.of(context).pop();
-                                          },
-                                          lineWeights: scratchMode==ScratchMode.eraser?eraserLineWeights:lineWeights,
-                                        ),
-                                      ),
-                                    ],
-                                  );
-                                },
-                              );
-                            },
-                          ),
-                          IconButton(
-                            icon: Icon(IconFonts.undo,size: 24,),
-                            onPressed: () {
-                              if (_scratchPaperState.currentState == null || !_scratchPaperState.currentState.undo()) {
-                                showErrorToast(AppLocalizations.of(context).getLanguageText('noMoreUndo'));
-                              }
-                            },
-                          ),
-                          IconButton(
-                            icon: Icon(IconFonts.redo,size: 24,),
-                            onPressed: () {
-                              if (_scratchPaperState.currentState == null || !_scratchPaperState.currentState.redo()) {
-                                showErrorToast(AppLocalizations.of(context).getLanguageText('noMoreRedo'));
-                              }
-                            },
-                          ),
-                          PopupMenuButton<MoreAction>(
-                            padding: EdgeInsets.all(0),
-                            child: Container(
-                              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.all(Radius.circular(999)),
-                              ),
-                              child: Icon(
-                                IconFonts.more,
-                                color: Colors.black,
-                                size: 22,
-                              ),
-                            ),
-                            onSelected: (MoreAction result) async {
-                              if (_scratchPaperState.currentState == null) return;
-                              switch (result) {
-                                case MoreAction.backOrigin:
-                                  _scratchPaperState.currentState.backOrigin();
-                                  break;
-                                case MoreAction.export:
-                                  var imageFilePath = await _scratchPaperState.currentState.export();
-                                  if (imageFilePath != "") {
-                                    await FlutterShare.shareFile(
-                                      title: 'ScratchPaper',
-                                      filePath: imageFilePath,
-                                    );
-                                  }
-                                  break;
-                                case MoreAction.clear:
-                                  _scratchPaperState.currentState.reset();
-                                  break;
-                                case MoreAction.import:
-                                  Map<PermissionGroup, PermissionStatus> permissions = await PermissionHandler().requestPermissions([PermissionGroup.storage, PermissionGroup.camera]);
-                                  if (permissions[PermissionGroup.storage] != PermissionStatus.granted || permissions[PermissionGroup.camera] != PermissionStatus.granted) {
-                                    return;
-                                  }
-                                  List<Asset> resultList = List<Asset>();
-                                  try {
-                                    resultList = await MultiImagePicker.pickImages(
-                                      maxImages: 1,
-                                      enableCamera: true,
-                                    );
-                                  } on Exception catch (e) {
-                                    print(e.toString());
-                                    return;
-                                  }
-                                  if (!mounted) return;
-                                  if (resultList.length <= 0) return;
-                                  ui.decodeImageFromList((await resultList[0].getByteData()).buffer.asUint8List(), (image) {
-                                    _scratchPaperState.currentState.image = image;
-                                  });
-                                  break;
-                                case MoreAction.gallery:
-                                  _scratchPaperState.currentState.saveGallery();
-                                  break;
-                                case MoreAction.wechat:
-                                  var imageFilePath = await _scratchPaperState.currentState.export();
-                                  if (imageFilePath != "") {
-                                    fluwx.shareToWeChat(fluwx.WeChatShareImageModel(
-                                      image: "file://$imageFilePath",
-                                      scene: fluwx.WeChatScene.SESSION,
-                                    ));
-                                  }
-                                  break;
-                              }
-                            },
-                            itemBuilder: (BuildContext context) {
-                              return <MoreAction>[MoreAction.backOrigin, MoreAction.clear, MoreAction.import, MoreAction.export, MoreAction.gallery, MoreAction.wechat].map((item) {
-                                return PopupMenuItem<MoreAction>(
-                                  value: item,
-                                  child: Row(
-                                    children: <Widget>[
-                                      Container(
-                                        margin: EdgeInsets.only(right: 10),
-                                        child: Icon(
-                                          MoreAction2Icon(item),
-                                          color: Colors.black,
-                                          size: 24,
-                                        ),
-                                      ),
-                                      Text(
-                                        MoreAction2Desc(context, item),
-                                        style: TextStyle(
-                                          color: Colors.black,
-                                          fontSize: 15,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              }).toList();
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ]
+            ]
+          ),
         ),
       ),
     );
