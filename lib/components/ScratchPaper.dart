@@ -20,6 +20,7 @@ enum ScratchMode {
   move,
   eraser,
   graphics,
+  text,
 }
 
 IconData scratchMode2Icon(ScratchMode mode) {
@@ -34,6 +35,8 @@ IconData scratchMode2Icon(ScratchMode mode) {
       return IconFonts.eraser;
     case ScratchMode.graphics:
       return IconFonts.ruler;
+    case ScratchMode.text:
+      return IconFonts.text;
   }
   return null;
 }
@@ -50,6 +53,8 @@ String scratchMode2Desc(BuildContext context, ScratchMode mode) {
       return AppLocalizations.of(context).getLanguageText('eraser');
     case ScratchMode.graphics:
       return AppLocalizations.of(context).getLanguageText('graphics');
+    case ScratchMode.text:
+      return AppLocalizations.of(context).getLanguageText('text');
   }
   return null;
 }
@@ -66,6 +71,8 @@ Color scratchMode2Color(ScratchMode mode) {
       return Colors.orange;
     case ScratchMode.graphics:
       return Colors.deepPurple;
+    case ScratchMode.text:
+      return Colors.teal;
   }
   return null;
 }

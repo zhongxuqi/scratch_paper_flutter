@@ -64,7 +64,7 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  final scratchModes = <ScratchMode>[ScratchMode.edit, ScratchMode.move, ScratchMode.eraser, ScratchMode.graphics];
+  final scratchModes = <ScratchMode>[ScratchMode.edit, ScratchMode.move, ScratchMode.eraser, ScratchMode.graphics, ScratchMode.text];
   final scratchGraphicsModes = <ScratchGraphicsMode>[ScratchGraphicsMode.line, ScratchGraphicsMode.square, ScratchGraphicsMode.circle, ScratchGraphicsMode.polygon];
   final GlobalKey<ScratchPaperState> _scratchPaperState = new GlobalKey<ScratchPaperState>();
 
