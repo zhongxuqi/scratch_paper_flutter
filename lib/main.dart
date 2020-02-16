@@ -124,88 +124,273 @@ class _MainPageState extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: _onWillPop,
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        body: Padding(
-          padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
-          child: Stack(
-            children: <Widget>[
-              Positioned(
-                left: 0,
-                top: 0,
-                right: 0,
-                bottom: 0,
-                child: ScratchPaper(
-                  key: _scratchPaperState,
-                  scratchMode: scratchMode,
-                  scratchGraphicsMode: scratchGraphicsMode,
-                  selectedColor: selectedColor,
-                  selectedLineWeight: scratchMode==ScratchMode.eraser?eraserSelectedLineWeight:selectedLineWeight,
-                  modeChanged: (newMode) {
-                    setState(() {
-                      scratchMode = newMode;
-                    });
-                  },
-                ),
-              ),
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                child: Container(
-                  margin: EdgeInsets.all(10),
-                  child: Row(
-                    children: <Widget>[
-                      PopupMenuButton<ScratchMode>(
-                        initialValue: scratchMode,
-                        child: Container(
-                          padding: EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: scratchMode2Color(scratchMode),
-                            borderRadius: BorderRadius.all(Radius.circular(999)),
-                          ),
-                          child: Row(
-                            children: <Widget>[
-                              Container(
-                                child: Icon(
-                                  scratchMode2Icon(scratchMode),
-                                  color: Colors.white,
-                                  size: 26,
-                                ),
-                              ),
-                              Container(
-                                child: Icon(
-                                  IconFonts.dropdown,
-                                  color: Colors.white,
-                                  size: 26,
-                                ),
-                              ),
-                            ],
+    Widget body = Stack(
+      children: <Widget>[
+        Positioned(
+          left: 0,
+          top: 0,
+          right: 0,
+          bottom: 0,
+          child: ScratchPaper(
+            key: _scratchPaperState,
+            scratchMode: scratchMode,
+            scratchGraphicsMode: scratchGraphicsMode,
+            selectedColor: selectedColor,
+            selectedLineWeight: scratchMode==ScratchMode.eraser?eraserSelectedLineWeight:selectedLineWeight,
+            modeChanged: (newMode) {
+              setState(() {
+                scratchMode = newMode;
+              });
+            },
+          ),
+        ),
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: Container(
+            margin: EdgeInsets.all(10),
+            child: Row(
+              children: <Widget>[
+                PopupMenuButton<ScratchMode>(
+                  initialValue: scratchMode,
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: scratchMode2Color(scratchMode),
+                      borderRadius: BorderRadius.all(Radius.circular(999)),
+                    ),
+                    child: Row(
+                      children: <Widget>[
+                        Container(
+                          child: Icon(
+                            scratchMode2Icon(scratchMode),
+                            color: Colors.white,
+                            size: 26,
                           ),
                         ),
-                        onSelected: (ScratchMode result) {
-                          setState(() {
-                            scratchMode = result;
-                          });
+                        Container(
+                          child: Icon(
+                            IconFonts.dropdown,
+                            color: Colors.white,
+                            size: 26,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  onSelected: (ScratchMode result) {
+                    setState(() {
+                      scratchMode = result;
+                    });
+                  },
+                  itemBuilder: (BuildContext context) {
+                    return scratchModes.map((item) {
+                      return PopupMenuItem<ScratchMode>(
+                        value: item,
+                        child: Row(
+                          children: <Widget>[
+                            Container(
+                              margin: EdgeInsets.only(right: 10),
+                              child: Icon(
+                                scratchMode2Icon(item),
+                                color: Colors.black,
+                                size: 24,
+                              ),
+                            ),
+                            Text(
+                              scratchMode2Desc(context, item),
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 15,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList();
+                  },
+                ),
+                Expanded(
+                  flex: 1,
+                  child: Container(),
+                ),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border.all(color: Colors.grey[100]),
+                    borderRadius: BorderRadius.all(Radius.circular(999)),
+                  ),
+                  child: Row(
+                    children: <Widget>[
+                      IconButton(
+                        icon: Icon(
+                          IconFonts.colors,
+                          size: 24,
+                          color: selectedColor,
+                        ),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return SimpleDialog(
+                                contentPadding: EdgeInsets.all(0),
+                                children: <Widget>[
+                                  Container(
+                                    constraints: BoxConstraints(
+                                      maxHeight: MediaQuery.of(context).size.height / 2,
+                                    ),
+                                    child: MaterialColorPicker(
+                                      allowShades: false,
+                                      onMainColorChange: (Color color) {
+                                        setState(() {
+                                          selectedColor = color;
+                                        });
+                                        Navigator.of(context).pop();
+                                      },
+                                      selectedColor: selectedColor,
+                                      colors: colors,
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
+                      ),
+                      IconButton(
+                        icon: Icon(IconFonts.lineWeight,size: 24,),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return SimpleDialog(
+                                contentPadding: EdgeInsets.all(0),
+                                children: <Widget>[
+                                  Container(
+                                    child: LineWeightPicker(
+                                      selectedColor: selectedColor,
+                                      lineWeight: scratchMode==ScratchMode.eraser?eraserSelectedLineWeight:selectedLineWeight,
+                                      onValue: (newValue) {
+                                        if (scratchMode == ScratchMode.eraser) {
+                                          setState(() {
+                                            eraserSelectedLineWeight = newValue;
+                                          });
+                                        } else {
+                                          setState(() {
+                                            selectedLineWeight = newValue;
+                                          });
+                                        }
+                                        Navigator.of(context).pop();
+                                      },
+                                      lineWeights: scratchMode==ScratchMode.eraser?eraserLineWeights:lineWeights,
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
+                      ),
+                      IconButton(
+                        icon: Icon(IconFonts.undo,size: 24,),
+                        onPressed: () {
+                          if (_scratchPaperState.currentState == null || !_scratchPaperState.currentState.undo()) {
+                            showErrorToast(AppLocalizations.of(context).getLanguageText('noMoreUndo'));
+                          }
+                        },
+                      ),
+                      IconButton(
+                        icon: Icon(IconFonts.redo,size: 24,),
+                        onPressed: () {
+                          if (_scratchPaperState.currentState == null || !_scratchPaperState.currentState.redo()) {
+                            showErrorToast(AppLocalizations.of(context).getLanguageText('noMoreRedo'));
+                          }
+                        },
+                      ),
+                      PopupMenuButton<MoreAction>(
+                        padding: EdgeInsets.all(0),
+                        child: Container(
+                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.all(Radius.circular(999)),
+                          ),
+                          child: Icon(
+                            IconFonts.more,
+                            color: Colors.black,
+                            size: 22,
+                          ),
+                        ),
+                        onSelected: (MoreAction result) async {
+                          if (_scratchPaperState.currentState == null) return;
+                          switch (result) {
+                            case MoreAction.backOrigin:
+                              _scratchPaperState.currentState.backOrigin();
+                              break;
+                            case MoreAction.export:
+                              var imageFilePath = await _scratchPaperState.currentState.export();
+                              if (imageFilePath != "") {
+                                await FlutterShare.shareFile(
+                                  title: 'ScratchPaper',
+                                  filePath: imageFilePath,
+                                );
+                              }
+                              break;
+                            case MoreAction.clear:
+                              _scratchPaperState.currentState.reset();
+                              break;
+                            case MoreAction.import:
+                              Map<PermissionGroup, PermissionStatus> permissions = await PermissionHandler().requestPermissions([PermissionGroup.storage, PermissionGroup.camera]);
+                              if (permissions[PermissionGroup.storage] != PermissionStatus.granted || permissions[PermissionGroup.camera] != PermissionStatus.granted) {
+                                return;
+                              }
+                              List<Asset> resultList = List<Asset>();
+                              try {
+                                resultList = await MultiImagePicker.pickImages(
+                                  maxImages: 1,
+                                  enableCamera: true,
+                                );
+                              } on Exception catch (e) {
+                                print(e.toString());
+                                return;
+                              }
+                              if (!mounted) return;
+                              if (resultList.length <= 0) return;
+                              ui.decodeImageFromList((await resultList[0].getByteData()).buffer.asUint8List(), (image) {
+                                _scratchPaperState.currentState.image = image;
+                              });
+                              break;
+                            case MoreAction.gallery:
+                              _scratchPaperState.currentState.saveGallery();
+                              break;
+                            case MoreAction.wechat:
+                              var imageFilePath = await _scratchPaperState.currentState.export();
+                              if (imageFilePath != "") {
+                                fluwx.shareToWeChat(fluwx.WeChatShareImageModel(
+                                  image: "file://$imageFilePath",
+                                  scene: fluwx.WeChatScene.SESSION,
+                                ));
+                              }
+                              break;
+                          }
                         },
                         itemBuilder: (BuildContext context) {
-                          return scratchModes.map((item) {
-                            return PopupMenuItem<ScratchMode>(
+                          return <MoreAction>[MoreAction.backOrigin, MoreAction.clear, MoreAction.import, MoreAction.export, MoreAction.gallery, MoreAction.wechat].map((item) {
+                            return PopupMenuItem<MoreAction>(
                               value: item,
                               child: Row(
                                 children: <Widget>[
                                   Container(
                                     margin: EdgeInsets.only(right: 10),
                                     child: Icon(
-                                      scratchMode2Icon(item),
+                                      MoreAction2Icon(item),
                                       color: Colors.black,
                                       size: 24,
                                     ),
                                   ),
                                   Text(
-                                    scratchMode2Desc(context, item),
+                                    MoreAction2Desc(context, item),
                                     style: TextStyle(
                                       color: Colors.black,
                                       fontSize: 15,
@@ -217,254 +402,78 @@ class _MainPageState extends State<MainPage> {
                           }).toList();
                         },
                       ),
-                      Expanded(
-                        flex: 1,
-                        child: Container(),
-                      ),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          border: Border.all(color: Colors.grey[100]),
-                          borderRadius: BorderRadius.all(Radius.circular(999)),
-                        ),
-                        child: Row(
-                          children: <Widget>[
-                            IconButton(
-                              icon: Icon(
-                                IconFonts.colors,
-                                size: 24,
-                                color: selectedColor,
-                              ),
-                              onPressed: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (BuildContext context) {
-                                    return SimpleDialog(
-                                      contentPadding: EdgeInsets.all(0),
-                                      children: <Widget>[
-                                        Container(
-                                          constraints: BoxConstraints(
-                                            maxHeight: MediaQuery.of(context).size.height / 2,
-                                          ),
-                                          child: MaterialColorPicker(
-                                            allowShades: false,
-                                            onMainColorChange: (Color color) {
-                                              setState(() {
-                                                selectedColor = color;
-                                              });
-                                              Navigator.of(context).pop();
-                                            },
-                                            selectedColor: selectedColor,
-                                            colors: colors,
-                                          ),
-                                        ),
-                                      ],
-                                    );
-                                  },
-                                );
-                              },
-                            ),
-                            IconButton(
-                              icon: Icon(IconFonts.lineWeight,size: 24,),
-                              onPressed: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (BuildContext context) {
-                                    return SimpleDialog(
-                                      contentPadding: EdgeInsets.all(0),
-                                      children: <Widget>[
-                                        Container(
-                                          child: LineWeightPicker(
-                                            selectedColor: selectedColor,
-                                            lineWeight: scratchMode==ScratchMode.eraser?eraserSelectedLineWeight:selectedLineWeight,
-                                            onValue: (newValue) {
-                                              if (scratchMode == ScratchMode.eraser) {
-                                                setState(() {
-                                                  eraserSelectedLineWeight = newValue;
-                                                });
-                                              } else {
-                                                setState(() {
-                                                  selectedLineWeight = newValue;
-                                                });
-                                              }
-                                              Navigator.of(context).pop();
-                                            },
-                                            lineWeights: scratchMode==ScratchMode.eraser?eraserLineWeights:lineWeights,
-                                          ),
-                                        ),
-                                      ],
-                                    );
-                                  },
-                                );
-                              },
-                            ),
-                            IconButton(
-                              icon: Icon(IconFonts.undo,size: 24,),
-                              onPressed: () {
-                                if (_scratchPaperState.currentState == null || !_scratchPaperState.currentState.undo()) {
-                                  showErrorToast(AppLocalizations.of(context).getLanguageText('noMoreUndo'));
-                                }
-                              },
-                            ),
-                            IconButton(
-                              icon: Icon(IconFonts.redo,size: 24,),
-                              onPressed: () {
-                                if (_scratchPaperState.currentState == null || !_scratchPaperState.currentState.redo()) {
-                                  showErrorToast(AppLocalizations.of(context).getLanguageText('noMoreRedo'));
-                                }
-                              },
-                            ),
-                            PopupMenuButton<MoreAction>(
-                              padding: EdgeInsets.all(0),
-                              child: Container(
-                                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.all(Radius.circular(999)),
-                                ),
-                                child: Icon(
-                                  IconFonts.more,
-                                  color: Colors.black,
-                                  size: 22,
-                                ),
-                              ),
-                              onSelected: (MoreAction result) async {
-                                if (_scratchPaperState.currentState == null) return;
-                                switch (result) {
-                                  case MoreAction.backOrigin:
-                                    _scratchPaperState.currentState.backOrigin();
-                                    break;
-                                  case MoreAction.export:
-                                    var imageFilePath = await _scratchPaperState.currentState.export();
-                                    if (imageFilePath != "") {
-                                      await FlutterShare.shareFile(
-                                        title: 'ScratchPaper',
-                                        filePath: imageFilePath,
-                                      );
-                                    }
-                                    break;
-                                  case MoreAction.clear:
-                                    _scratchPaperState.currentState.reset();
-                                    break;
-                                  case MoreAction.import:
-                                    Map<PermissionGroup, PermissionStatus> permissions = await PermissionHandler().requestPermissions([PermissionGroup.storage, PermissionGroup.camera]);
-                                    if (permissions[PermissionGroup.storage] != PermissionStatus.granted || permissions[PermissionGroup.camera] != PermissionStatus.granted) {
-                                      return;
-                                    }
-                                    List<Asset> resultList = List<Asset>();
-                                    try {
-                                      resultList = await MultiImagePicker.pickImages(
-                                        maxImages: 1,
-                                        enableCamera: true,
-                                      );
-                                    } on Exception catch (e) {
-                                      print(e.toString());
-                                      return;
-                                    }
-                                    if (!mounted) return;
-                                    if (resultList.length <= 0) return;
-                                    ui.decodeImageFromList((await resultList[0].getByteData()).buffer.asUint8List(), (image) {
-                                      _scratchPaperState.currentState.image = image;
-                                    });
-                                    break;
-                                  case MoreAction.gallery:
-                                    _scratchPaperState.currentState.saveGallery();
-                                    break;
-                                  case MoreAction.wechat:
-                                    var imageFilePath = await _scratchPaperState.currentState.export();
-                                    if (imageFilePath != "") {
-                                      fluwx.shareToWeChat(fluwx.WeChatShareImageModel(
-                                        image: "file://$imageFilePath",
-                                        scene: fluwx.WeChatScene.SESSION,
-                                      ));
-                                    }
-                                    break;
-                                }
-                              },
-                              itemBuilder: (BuildContext context) {
-                                return <MoreAction>[MoreAction.backOrigin, MoreAction.clear, MoreAction.import, MoreAction.export, MoreAction.gallery, MoreAction.wechat].map((item) {
-                                  return PopupMenuItem<MoreAction>(
-                                    value: item,
-                                    child: Row(
-                                      children: <Widget>[
-                                        Container(
-                                          margin: EdgeInsets.only(right: 10),
-                                          child: Icon(
-                                            MoreAction2Icon(item),
-                                            color: Colors.black,
-                                            size: 24,
-                                          ),
-                                        ),
-                                        Text(
-                                          MoreAction2Desc(context, item),
-                                          style: TextStyle(
-                                            color: Colors.black,
-                                            fontSize: 15,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                }).toList();
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
                     ],
                   ),
                 ),
-              ),
-              scratchMode==ScratchMode.graphics?Positioned(
-                top: 0,
-                left: 10,
-                bottom: 0,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border.all(color: Colors.grey[100]),
-                        borderRadius: BorderRadius.all(Radius.circular(999)),
-                      ),
-                      alignment: Alignment.center,
-                      child: Column(
-                        children: scratchGraphicsModes.map((item) {
-                          var borderRadius = BorderRadius.zero;
-                          if (item == ScratchGraphicsMode.line) {
-                            borderRadius = BorderRadius.vertical(top: Radius.circular(999));
-                          } else if (item == ScratchGraphicsMode.polygon) {
-                            borderRadius = BorderRadius.vertical(bottom: Radius.circular(999));
-                          }
-                          return GestureDetector(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: item==scratchGraphicsMode?Colors.deepPurple:Colors.transparent,
-                                borderRadius: borderRadius,
-                              ),
-                              child: IconButton(
-                                icon: Icon(
-                                  scratchGraphicsMode2Icon(item),
-                                  size: 24,
-                                  color: item==scratchGraphicsMode?Colors.white:Colors.black,
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    scratchGraphicsMode = item;
-                                  });
-                                },
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                  ],
-                ),
-              ):Container(),
-            ]
+              ],
+            ),
           ),
+        ),
+        scratchMode==ScratchMode.graphics?Positioned(
+          top: 0,
+          left: 10,
+          bottom: 0,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border.all(color: Colors.grey[100]),
+                  borderRadius: BorderRadius.all(Radius.circular(999)),
+                ),
+                alignment: Alignment.center,
+                child: Column(
+                  children: scratchGraphicsModes.map((item) {
+                    var borderRadius = BorderRadius.zero;
+                    if (item == ScratchGraphicsMode.line) {
+                      borderRadius = BorderRadius.vertical(top: Radius.circular(999));
+                    } else if (item == ScratchGraphicsMode.polygon) {
+                      borderRadius = BorderRadius.vertical(bottom: Radius.circular(999));
+                    }
+                    return GestureDetector(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: item==scratchGraphicsMode?Colors.deepPurple:Colors.transparent,
+                          borderRadius: borderRadius,
+                        ),
+                        child: IconButton(
+                          icon: Icon(
+                            scratchGraphicsMode2Icon(item),
+                            size: 24,
+                            color: item==scratchGraphicsMode?Colors.white:Colors.black,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              scratchGraphicsMode = item;
+                            });
+                          },
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
+          ),
+        ):Container(),
+      ]
+    );
+    if (scratchMode == ScratchMode.text) {
+      body = GestureDetector(
+        child: body,
+        onTapUp: (details) {
+          print("===>>> ${details.localPosition.dx} ${details.localPosition.dy}");
+        },
+      );
+    }
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: Padding(
+          padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+          child: body,
         ),
       ),
     );

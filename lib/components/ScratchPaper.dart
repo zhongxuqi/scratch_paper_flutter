@@ -559,6 +559,8 @@ class ScratchPaperState extends State<ScratchPaper> {
               break;
             case ScratchMode.move:
               break;
+            case ScratchMode.text:
+              break;
           }
         },
         onScaleUpdate: (details) {
@@ -623,6 +625,8 @@ class ScratchPaperState extends State<ScratchPaper> {
               setState(() {});
               lastPoint = currPoint;
               break;
+            case ScratchMode.text:
+              break;
           }
         },
         onScaleEnd: (details) {
@@ -637,6 +641,8 @@ class ScratchPaperState extends State<ScratchPaper> {
               _checkStrokes();
               break;
             case ScratchMode.move:
+              break;
+            case ScratchMode.text:
               break;
           }
           currStroke = null;
