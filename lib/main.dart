@@ -105,6 +105,13 @@ class _MainPageState extends State<MainPage> {
   final eraserLineWeights = <double>[8, 12, 16, 20, 24, 28];
   double eraserSelectedLineWeight = 16;
 
+  Offset textInputerOffset;
+  final textInpterMinWidth = 200;
+  final textCtl = TextEditingController();
+  final textFocusNode = FocusNode();
+  double fontSize = 12;
+  final fontSizes = <double>[8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30];
+
   @override
   void initState() {
     super.initState();
@@ -120,6 +127,15 @@ class _MainPageState extends State<MainPage> {
       return Future.value(false);
     }
     return Future.value(true);
+  }
+
+  void addText() {
+    if (textCtl.text.length <= 0) return;
+    setState(() {
+      _scratchPaperState.currentState.addText(textInputerOffset, textCtl.text, fontSize);
+      textInputerOffset = null;
+      textCtl.text = "";
+    });
   }
 
   @override
@@ -181,6 +197,8 @@ class _MainPageState extends State<MainPage> {
                   ),
                   onSelected: (ScratchMode result) {
                     setState(() {
+                      textInputerOffset = null;
+                      textCtl.text = "";
                       scratchMode = result;
                     });
                   },
@@ -457,13 +475,124 @@ class _MainPageState extends State<MainPage> {
             ],
           ),
         ):Container(),
+        textInputerOffset==null?Positioned(
+          top: 0,
+          left: 0,
+          child: Container(),
+        ):Positioned(
+          top: textInputerOffset.dy,
+          left: textInputerOffset.dx,
+          child: Container(
+            width: MediaQuery.of(context).size.width - textInputerOffset.dx - 5,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.all(Radius.circular(5)),
+              border: Border.all(color: Colors.teal),
+            ),
+            child: Row(
+              children: <Widget>[
+                Expanded(
+                  flex: 1,
+                  child: CupertinoTextField(
+                    controller: textCtl,
+                    focusNode: textFocusNode,
+                    maxLines: 1,
+                    decoration: BoxDecoration(
+                      color: Colors.transparent,
+                    ),
+                    placeholder: AppLocalizations.of(context).getLanguageText('inputHint'),
+                    style: TextStyle(
+                      fontSize: fontSize,
+                      color: selectedColor,
+                      textBaseline: TextBaseline.alphabetic,
+                    ),
+                    onSubmitted: (t) {
+                      addText();
+                    },
+                    onEditingComplete: () {
+                      addText();
+                    },
+                  ),
+                ),
+                InkWell(
+                  child: Container(
+                    padding: EdgeInsets.symmetric(vertical: 5, horizontal: 8),
+                    child: Icon(IconFonts.ok, size: 17, color: Colors.teal,),
+                  ),
+                  onTap: () {
+                    addText();
+                  },
+                ),
+                Container(
+                  margin: EdgeInsets.only(right: 5),
+                  child: PopupMenuButton<double>(
+                    initialValue: fontSize,
+                    child: Container(
+                      padding: EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(
+                            color: Colors.teal,
+                          ),
+                        ),
+                      ),
+                      child: Row(
+                        children: <Widget>[
+                          Container(
+                            child: Text(
+                              fontSize.toInt().toString(),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.teal,
+                              ),
+                            ),
+                          ),
+                          Container(
+                            child: Icon(
+                              IconFonts.dropdown,
+                              color: Colors.teal,
+                              size: 15,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    onSelected: (newValue) {
+                      setState(() {
+                        fontSize = newValue;
+                      });
+                    },
+                    itemBuilder: (BuildContext context) {
+                      return fontSizes.map((item) {
+                        return PopupMenuItem<double>(
+                          value: item,
+                          child: Text(
+                            item.toInt().toString(),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.teal,
+                            ),
+                          ),
+                        );
+                      }).toList();
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ]
     );
     if (scratchMode == ScratchMode.text) {
       body = GestureDetector(
         child: body,
         onTapUp: (details) {
-          print("===>>> ${details.localPosition.dx} ${details.localPosition.dy}");
+          setState(() {
+            textInputerOffset = Offset(
+              details.localPosition.dx+textInpterMinWidth>MediaQuery.of(context).size.width?MediaQuery.of(context).size.width-textInpterMinWidth:details.localPosition.dx,
+              details.localPosition.dy,
+            );
+          });
         },
       );
     }

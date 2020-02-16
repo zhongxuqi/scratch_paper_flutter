@@ -26,4 +26,5 @@ class IconFonts {
   static const IconData line = IconData(0xe815, fontFamily: 'iconfont');
   static const IconData circle = IconData(0xe63c, fontFamily: 'iconfont');
   static const IconData text = IconData(0xe6d3, fontFamily: 'iconfont');
+  static const IconData ok = IconData(0xe6f5, fontFamily: 'iconfont');
 }

@@ -33,6 +33,7 @@ class AppLocalizations {
       'contentEmpty': 'Content empty',
       'exitAlert': 'Exit will lost all modify, are you sure ?',
       'text': 'Text',
+      'inputHint': 'Input text',
     },
     'zh': {
       'edit': '编辑',
@@ -55,6 +56,7 @@ class AppLocalizations {
       'contentEmpty': '内容为空',
       'exitAlert': '退出会丢失目前所有的修改，是否确认？',
       'text': '文本',
+      'inputHint': '输入文本',
     }
   };
 

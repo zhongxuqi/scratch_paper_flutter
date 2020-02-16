@@ -177,6 +177,23 @@ void drawStroke(Canvas canvas, Paint paint, Stroke stroke) {
           break;
       }
       break;
+    case ScratchMode.text:
+      if (stroke.points.length > 0) {
+        var textPainter = TextPainter(
+          text: TextSpan(
+            text: stroke.text,
+            style: TextStyle(
+              fontSize: stroke.fontSize,
+              color: stroke.color,
+            ),
+          ),
+          textDirection: TextDirection.rtl,
+        );
+        textPainter.layout(minWidth: 0, maxWidth: 9999);
+        textPainter.paint(
+            canvas, Offset(stroke.points.first.x, stroke.points.first.y));
+      }
+      break;
     default:
       var path = Path()
         ..fillType = PathFillType.evenOdd;
@@ -376,59 +393,71 @@ class ScratchPaperState extends State<ScratchPaper> {
     }
 
     for (var stroke in _strokes) {
-      if (stroke.scratchMode != ScratchMode.graphics || stroke.scratchGraphicsMode != ScratchGraphicsMode.circle) {
-        for (var point in stroke.points) {
+      if (stroke.scratchMode == ScratchMode.graphics && stroke.scratchGraphicsMode == ScratchGraphicsMode.circle) {
+        if (stroke.points.length >= 2) {
+          var circleCenter = stroke.points.elementAt(0);
+          var radius = circleCenter.distanceTo(stroke.points.elementAt(1));
+          var leftTopPoint = Offset(circleCenter.x - radius - stroke.lineWeight, circleCenter.y - radius - stroke.lineWeight);
+          var rightBottomPoint = Offset(circleCenter.x + radius + stroke.lineWeight, circleCenter.y + radius + stroke.lineWeight);
           if (_leftTopBorder == null) {
+            _leftTopBorder = leftTopPoint;
+          } else if (_leftTopBorder.dx > leftTopPoint.dx ||
+              _leftTopBorder.dy > leftTopPoint.dy) {
             _leftTopBorder = Offset(
-                point.x - stroke.lineWeight, point.y - stroke.lineWeight);
-          } else if (_leftTopBorder.dx > point.x - stroke.lineWeight ||
-              _leftTopBorder.dy > point.y - stroke.lineWeight) {
-            _leftTopBorder = Offset(
-              _leftTopBorder.dx > point.x - stroke.lineWeight ? point.x -
-                  stroke.lineWeight : _leftTopBorder.dx,
-              _leftTopBorder.dy > point.y - stroke.lineWeight ? point.y -
-                  stroke.lineWeight : _leftTopBorder.dy,
+              _leftTopBorder.dx > leftTopPoint.dx ? leftTopPoint.dx : _leftTopBorder.dx,
+              _leftTopBorder.dy > leftTopPoint.dy ? leftTopPoint.dy : _leftTopBorder.dy,
             );
           }
           if (_rightBottomBorder == null) {
+            _rightBottomBorder = rightBottomPoint;
+          } else if (_rightBottomBorder.dx < rightBottomPoint.dx || _rightBottomBorder.dy < rightBottomPoint.dy) {
             _rightBottomBorder = Offset(
-                point.x + stroke.lineWeight, point.y + stroke.lineWeight);
-          } else if (_rightBottomBorder.dx < point.x + stroke.lineWeight ||
-              _rightBottomBorder.dy < point.y + stroke.lineWeight) {
+              _rightBottomBorder.dx < rightBottomPoint.dx ? rightBottomPoint.dx : _rightBottomBorder.dx,
+              _rightBottomBorder.dy < rightBottomPoint.dy ? rightBottomPoint.dy : _rightBottomBorder.dy,
+            );
+          }
+        }
+      } else if (stroke.scratchMode == ScratchMode.text) {
+        if (stroke.points.length > 0) {
+          var leftTopPoint = Offset(stroke.points.first.x - stroke.lineWeight, stroke.points.first.y - stroke.lineWeight);
+          var rightBottomPoint = Offset(stroke.points.first.x + stroke.fontSize + stroke.lineWeight, stroke.points.first.y + stroke.text.length * stroke.fontSize + stroke.lineWeight);
+          if (_leftTopBorder == null) {
+            _leftTopBorder = leftTopPoint;
+          } else if (_leftTopBorder.dx > leftTopPoint.dx ||
+              _leftTopBorder.dy > leftTopPoint.dy) {
+            _leftTopBorder = Offset(
+              _leftTopBorder.dx > leftTopPoint.dx ? leftTopPoint.dx : _leftTopBorder.dx,
+              _leftTopBorder.dy > leftTopPoint.dy ? leftTopPoint.dy : _leftTopBorder.dy,
+            );
+          }
+          if (_rightBottomBorder == null) {
+            _rightBottomBorder = rightBottomPoint;
+          } else if (_rightBottomBorder.dx < rightBottomPoint.dx || _rightBottomBorder.dy < rightBottomPoint.dy) {
             _rightBottomBorder = Offset(
-              _rightBottomBorder.dx < point.x + stroke.lineWeight ? point.x +
-                  stroke.lineWeight : _rightBottomBorder.dx,
-              _rightBottomBorder.dy < point.y + stroke.lineWeight ? point.y +
-                  stroke.lineWeight : _rightBottomBorder.dy,
+              _rightBottomBorder.dx < rightBottomPoint.dx ? rightBottomPoint.dx : _rightBottomBorder.dx,
+              _rightBottomBorder.dy < rightBottomPoint.dy ? rightBottomPoint.dy : _rightBottomBorder.dy,
             );
           }
         }
       } else {
-        if (stroke.points.length >= 2) {
-          var circleCenter = stroke.points.elementAt(0);
-          var radius = circleCenter.distanceTo(stroke.points.elementAt(1));
+        for (var point in stroke.points) {
+          var leftTopPoint = Offset(point.x - stroke.lineWeight, point.y - stroke.lineWeight);
+          var rightBottomPoint = Offset(point.x + stroke.lineWeight, point.y + stroke.lineWeight);
           if (_leftTopBorder == null) {
+            _leftTopBorder = leftTopPoint;
+          } else if (_leftTopBorder.dx > leftTopPoint.dx ||
+              _leftTopBorder.dy > leftTopPoint.dy) {
             _leftTopBorder = Offset(
-                circleCenter.x - radius - stroke.lineWeight, circleCenter.y - radius - stroke.lineWeight);
-          } else if (_leftTopBorder.dx > circleCenter.x - radius - stroke.lineWeight ||
-              _leftTopBorder.dy > circleCenter.y - radius - stroke.lineWeight) {
-            _leftTopBorder = Offset(
-              _leftTopBorder.dx > circleCenter.x - radius - stroke.lineWeight ? circleCenter.x - radius -
-                  stroke.lineWeight : _leftTopBorder.dx,
-              _leftTopBorder.dy > circleCenter.y - radius - stroke.lineWeight ? circleCenter.y - radius -
-                  stroke.lineWeight : _leftTopBorder.dy,
+              _leftTopBorder.dx > leftTopPoint.dx ? leftTopPoint.dx : _leftTopBorder.dx,
+              _leftTopBorder.dy > leftTopPoint.dy ? leftTopPoint.dy : _leftTopBorder.dy,
             );
           }
           if (_rightBottomBorder == null) {
+            _rightBottomBorder = rightBottomPoint;
+          } else if (_rightBottomBorder.dx < rightBottomPoint.dx || _rightBottomBorder.dy < rightBottomPoint.dy) {
             _rightBottomBorder = Offset(
-                circleCenter.x + radius + stroke.lineWeight, circleCenter.y + radius + stroke.lineWeight);
-          } else if (_rightBottomBorder.dx < circleCenter.x + radius + stroke.lineWeight ||
-              _rightBottomBorder.dy < circleCenter.y + radius + stroke.lineWeight) {
-            _rightBottomBorder = Offset(
-              _rightBottomBorder.dx < circleCenter.x + radius + stroke.lineWeight ? circleCenter.x + radius +
-                  stroke.lineWeight : _rightBottomBorder.dx,
-              _rightBottomBorder.dy < circleCenter.y + radius + stroke.lineWeight ? circleCenter.y + radius +
-                  stroke.lineWeight : _rightBottomBorder.dy,
+              _rightBottomBorder.dx < rightBottomPoint.dx ? rightBottomPoint.dx : _rightBottomBorder.dx,
+              _rightBottomBorder.dy < rightBottomPoint.dy ? rightBottomPoint.dy : _rightBottomBorder.dy,
             );
           }
         }
@@ -491,6 +520,21 @@ class ScratchPaperState extends State<ScratchPaper> {
       strokes.remove(strokes.first);
     }
     isCheckingStrokes = false;
+  }
+
+  void addText(Offset loca, String text, double fontSize) {
+    strokes.add(Stroke(
+      scratchMode: widget.scratchMode,
+      scratchGraphicsMode: widget.scratchGraphicsMode,
+      points: LinkedList<Point>()..add(Point(
+        x: -translate.x + loca.dx / scale,
+        y: -translate.y + loca.dy / scale,
+      )),
+      color: widget.selectedColor,
+      lineWeight: widget.selectedLineWeight,
+      text: text,
+      fontSize: fontSize,
+    ));
   }
 
   @override
@@ -692,8 +736,18 @@ class Stroke extends LinkedListEntry<Stroke> {
   final LinkedList<Point> points;
   final Color color;
   final double lineWeight;
+  final String text;
+  final double fontSize;
 
-  Stroke({@required this.scratchMode, @required this.scratchGraphicsMode, @required this.points, @required this.color, @required this.lineWeight});
+  Stroke({
+    @required this.scratchMode,
+    @required this.scratchGraphicsMode,
+    @required this.points,
+    @required this.color,
+    @required this.lineWeight,
+    this.text = "",
+    this.fontSize = 12.0,
+  });
 
   Stroke clone() {
     return Stroke(
