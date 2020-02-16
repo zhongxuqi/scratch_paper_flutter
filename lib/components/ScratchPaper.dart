@@ -12,6 +12,8 @@ import 'alertDialog.dart';
 import 'Toast.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 
+const double PolygonDistanceMax = 20;
+
 enum ScratchMode {
   unknow,
   edit,
@@ -180,10 +182,10 @@ void drawStroke(Canvas canvas, Paint paint, Stroke stroke) {
   }
 }
 
-void paintCanvas(BuildContext context, Canvas canvas, double scale, Point translate, ui.Image image, Offset offset, LinkedList<Stroke> strokes, Stroke currStroke, ScratchMode scratchMode, Point focalPoint, {bool disableClipRect = false}) {
+void paintCanvas(BuildContext context, Canvas canvas, double scale, Point translate, ui.Image image, Offset offset, LinkedList<Stroke> strokes, Stroke currStroke, ScratchMode scratchMode, Point focalPoint, {bool isExport = false}) {
   canvas.scale(scale);
   canvas.translate(translate.x, translate.y);
-  if (!disableClipRect) {
+  if (!isExport) {
     canvas.clipRect(ui.Rect.fromPoints(
       Offset(-translate.x, -translate.y - MediaQuery
           .of(context)
@@ -231,8 +233,22 @@ void paintCanvas(BuildContext context, Canvas canvas, double scale, Point transl
   for (var stroke in strokes) {
     drawStroke(canvas, paint, stroke);
   }
+
   if (currStroke != null) {
     drawStroke(canvas, paint, currStroke);
+
+    // 如果是多边形就标记一下
+    if (!isExport && currStroke.scratchMode == ScratchMode.graphics &&
+        currStroke.scratchGraphicsMode == ScratchGraphicsMode.polygon && currStroke.points.length > 0 &&
+        strokes.length > 0 && strokes.last.points.length > 0) {
+      for (var point in currStroke.points) {
+        if (point.exists) {
+          paint.color = Colors.grey;
+          paint.strokeWidth = 2;
+          canvas.drawCircle(Offset(point.x, point.y), PolygonDistanceMax, paint);
+        }
+      }
+    }
   }
 
   if (scratchMode == ScratchMode.eraser && focalPoint != null) {
@@ -247,6 +263,7 @@ void paintCanvas(BuildContext context, Canvas canvas, double scale, Point transl
 class ScratchPaperState extends State<ScratchPaper> {
   final maxStrokesLen = 10;
   final double minScale = 0.1;
+  final double maxScale = 2;
   final LinkedList<Stroke> strokes = LinkedList<Stroke>();
   final LinkedList<Stroke> undoStrokes = LinkedList<Stroke>();
   bool isCheckingStrokes = false;
@@ -419,7 +436,7 @@ class ScratchPaperState extends State<ScratchPaper> {
       ..style = PaintingStyle.fill
       ..color = Colors.white;
     canvas.drawRect(Rect.fromLTRB(0, 0, rightBottomPoint.dx, rightBottomPoint.dy), paint);
-    paintCanvas(context, canvas, 1, translate, _image, offset, _strokes, null, ScratchMode.edit, null, disableClipRect: true);
+    paintCanvas(context, canvas, 1, translate, _image, offset, _strokes, null, ScratchMode.edit, null, isExport: true);
     final picture = recorder.endRecording();
     return await picture.toImage(rightBottomPoint.dx.toInt(), rightBottomPoint.dy.toInt());
   }
@@ -494,16 +511,44 @@ class ScratchPaperState extends State<ScratchPaper> {
               break;
             case ScratchMode.edit:
             case ScratchMode.graphics:
-              currStroke = Stroke(
-                scratchMode: widget.scratchMode,
-                scratchGraphicsMode: widget.scratchGraphicsMode,
-                points: LinkedList<Point>()..add(Point(
-                  x: -translate.x + details.localFocalPoint.dx / scale,
-                  y: -translate.y + details.localFocalPoint.dy / scale,
-                )),
-                color: widget.selectedColor,
-                lineWeight: widget.selectedLineWeight,
-              );
+              switch (widget.scratchGraphicsMode) {
+                case ScratchGraphicsMode.polygon:
+                  var currPoint = Point(
+                    x: -translate.x + details.localFocalPoint.dx / scale,
+                    y: -translate.y + details.localFocalPoint.dy / scale,
+                  );
+                  double radius = PolygonDistanceMax;
+                  var selectedPoint = currPoint;
+                  for (var stroke in strokes) {
+                    for (var point in stroke.points) {
+                      var theRadius = currPoint.distanceTo(point);
+                      if (radius > theRadius) {
+                        radius = theRadius;
+                        selectedPoint = point.clone(exists: true);
+                      }
+                    }
+                  }
+                  currStroke = Stroke(
+                    scratchMode: widget.scratchMode,
+                    scratchGraphicsMode: widget.scratchGraphicsMode,
+                    points: LinkedList<Point>()..add(selectedPoint),
+                    color: widget.selectedColor,
+                    lineWeight: widget.selectedLineWeight,
+                  );
+                  break;
+                default:
+                  currStroke = Stroke(
+                    scratchMode: widget.scratchMode,
+                    scratchGraphicsMode: widget.scratchGraphicsMode,
+                    points: LinkedList<Point>()..add(Point(
+                      x: -translate.x + details.localFocalPoint.dx / scale,
+                      y: -translate.y + details.localFocalPoint.dy / scale,
+                    )),
+                    color: widget.selectedColor,
+                    lineWeight: widget.selectedLineWeight,
+                  );
+                  break;
+              }
               break;
             case ScratchMode.move:
               break;
@@ -529,6 +574,9 @@ class ScratchPaperState extends State<ScratchPaper> {
               if (scale * factor < minScale) {
                 factor = 1;
                 scale = minScale;
+              } else if (scale * factor > maxScale) {
+                factor = 1;
+                scale = maxScale;
               } else {
                 scale = scale * factor;
               }
@@ -545,27 +593,34 @@ class ScratchPaperState extends State<ScratchPaper> {
             case ScratchMode.graphics:
               var currPoint = Point(x: -translate.x + details.localFocalPoint.dx / scale, y: -translate.y + details.localFocalPoint.dy / scale);
 
-              // 根据图形类型来绘画
-              switch (widget.scratchGraphicsMode) {
-                case ScratchGraphicsMode.line:
-                case ScratchGraphicsMode.square:
-                case ScratchGraphicsMode.circle:
-                  while (currStroke.points.length > 1) {
-                    currStroke.points.remove(currStroke.points.last);
+              // 多边形特殊逻辑
+              if (widget.scratchGraphicsMode == ScratchGraphicsMode.polygon) {
+                double radius = PolygonDistanceMax;
+                var selectedPoint = currPoint;
+                for (var stroke in strokes) {
+                  for (var point in stroke.points) {
+                    var theRadius = currPoint.distanceTo(point);
+                    if (radius > theRadius) {
+                      radius = theRadius;
+                      selectedPoint = point.clone(exists: true);
+                    }
                   }
-                  currStroke.points.add(currPoint);
-                  setState(() {});
-                  break;
-                default:
-                  break;
+                }
+                currPoint = selectedPoint;
               }
+
+              while (currStroke.points.length > 1) {
+                currStroke.points.remove(currStroke.points.last);
+              }
+              currStroke.points.add(currPoint);
+              setState(() {});
+              lastPoint = currPoint;
               break;
           }
         },
         onScaleEnd: (details) {
           switch (widget.scratchMode) {
             case ScratchMode.unknow:
-              currStroke = null;
               break;
             case ScratchMode.eraser:
             case ScratchMode.edit:
@@ -573,12 +628,11 @@ class ScratchPaperState extends State<ScratchPaper> {
               strokes.add(currStroke);
               undoStrokes.clear();
               _checkStrokes();
-              currStroke = null;
               break;
             case ScratchMode.move:
-              currStroke = null;
               break;
           }
+          currStroke = null;
           lastPoint = null;
           setState(() {});
           if (nextMode != ScratchMode.unknow) {
@@ -606,11 +660,16 @@ class ScratchPaperState extends State<ScratchPaper> {
 
 class Point extends LinkedListEntry<Point> {
   final double x, y;
+  final bool exists;
 
-  Point({@required this.x, @required this.y});
+  Point({@required this.x, @required this.y, this.exists = false});
 
   double distanceTo(Point p2) {
     return math.sqrt(math.pow(x - p2.x, 2) + math.pow(y - p2.y, 2));
+  }
+
+  Point clone({bool exists = false}) {
+    return Point(x: x, y: y, exists: exists);
   }
 }
 
