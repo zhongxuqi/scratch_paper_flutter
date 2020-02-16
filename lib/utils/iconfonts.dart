@@ -20,4 +20,9 @@ class IconFonts {
   static const IconData location = IconData(0xe62e, fontFamily: 'iconfont');
   static const IconData wechat = IconData(0xe63b, fontFamily: 'iconfont');
   static const IconData gallery = IconData(0xe98a, fontFamily: 'iconfont');
+  static const IconData ruler = IconData(0xe7dc, fontFamily: 'iconfont');
+  static const IconData polygon = IconData(0xe7cb, fontFamily: 'iconfont');
+  static const IconData square = IconData(0xe660, fontFamily: 'iconfont');
+  static const IconData line = IconData(0xe815, fontFamily: 'iconfont');
+  static const IconData circle = IconData(0xe63c, fontFamily: 'iconfont');
 }

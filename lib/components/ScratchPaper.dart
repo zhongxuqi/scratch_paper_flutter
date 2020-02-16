@@ -1,5 +1,6 @@
 import 'dart:collection';
 import 'dart:ui' as ui;
+import 'dart:math' as math;
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:scratch_paper_flutter/utils/iconfonts.dart';
@@ -16,9 +17,10 @@ enum ScratchMode {
   edit,
   move,
   eraser,
+  graphics,
 }
 
-IconData ScratchMode2Icon(ScratchMode mode) {
+IconData scratchMode2Icon(ScratchMode mode) {
   switch (mode) {
     case ScratchMode.unknow:
       return IconFonts.edit;
@@ -28,11 +30,13 @@ IconData ScratchMode2Icon(ScratchMode mode) {
       return IconFonts.move;
     case ScratchMode.eraser:
       return IconFonts.eraser;
+    case ScratchMode.graphics:
+      return IconFonts.ruler;
   }
   return null;
 }
 
-String ScratchMode2Desc(BuildContext context, ScratchMode mode) {
+String scratchMode2Desc(BuildContext context, ScratchMode mode) {
   switch (mode) {
     case ScratchMode.unknow:
       return "";
@@ -42,11 +46,13 @@ String ScratchMode2Desc(BuildContext context, ScratchMode mode) {
       return AppLocalizations.of(context).getLanguageText('move');
     case ScratchMode.eraser:
       return AppLocalizations.of(context).getLanguageText('eraser');
+    case ScratchMode.graphics:
+      return AppLocalizations.of(context).getLanguageText('graphics');
   }
   return null;
 }
 
-Color ScratchMode2Color(ScratchMode mode) {
+Color scratchMode2Color(ScratchMode mode) {
   switch (mode) {
     case ScratchMode.unknow:
       return Colors.black;
@@ -56,17 +62,49 @@ Color ScratchMode2Color(ScratchMode mode) {
       return Colors.blue;
     case ScratchMode.eraser:
       return Colors.orange;
+    case ScratchMode.graphics:
+      return Colors.deepPurple;
   }
   return null;
 }
 
+enum ScratchGraphicsMode {
+  line,
+  square,
+  circle,
+  polygon,
+}
+
+IconData scratchGraphicsMode2Icon(ScratchGraphicsMode mode) {
+  switch (mode) {
+    case ScratchGraphicsMode.line:
+      return IconFonts.line;
+    case ScratchGraphicsMode.square:
+      return IconFonts.square;
+    case ScratchGraphicsMode.circle:
+      return IconFonts.circle;
+    case ScratchGraphicsMode.polygon:
+      return IconFonts.polygon;
+    default:
+      return IconFonts.edit;
+  }
+}
+
 class ScratchPaper extends StatefulWidget {
   final ScratchMode scratchMode;
+  final ScratchGraphicsMode scratchGraphicsMode;
   final Color selectedColor;
   final double selectedLineWeight;
   final ValueChanged<ScratchMode> modeChanged;
 
-  ScratchPaper({Key key, @required this.scratchMode, @required this.selectedColor, @required this.selectedLineWeight, @required this.modeChanged}): super(key: key);
+  ScratchPaper({
+    Key key,
+    @required this.scratchMode,
+    @required this.scratchGraphicsMode,
+    @required this.selectedColor,
+    @required this.selectedLineWeight,
+    @required this.modeChanged,
+  }): super(key: key);
 
   @override
   ScratchPaperState createState() => ScratchPaperState(
@@ -92,19 +130,54 @@ void drawDash(Canvas canvas, Paint paint, Offset from, Offset to, double width) 
 }
 
 void drawStroke(Canvas canvas, Paint paint, Stroke stroke) {
-  var path = Path()
-    ..fillType = PathFillType.evenOdd;
   paint.color = stroke.color;
   paint.strokeWidth = stroke.lineWeight.toDouble();
 
-  for (var i=0;i<stroke.points.length;i++) {
-    if (i == 0) {
-      path.moveTo(stroke.points.elementAt(i).x, stroke.points.elementAt(i).y);
-    } else {
-      path.lineTo(stroke.points.elementAt(i).x, stroke.points.elementAt(i).y);
-    }
+  switch (stroke.scratchMode) {
+    case ScratchMode.graphics:
+      switch (stroke.scratchGraphicsMode) {
+        case ScratchGraphicsMode.square:
+          if (stroke.points.length >= 2) {
+            var path = Path()
+              ..fillType = PathFillType.evenOdd;
+            path.moveTo(stroke.points.elementAt(0).x, stroke.points.elementAt(0).y);
+            path.lineTo(stroke.points.elementAt(0).x, stroke.points.elementAt(1).y);
+            path.lineTo(stroke.points.elementAt(1).x, stroke.points.elementAt(1).y);
+            path.lineTo(stroke.points.elementAt(1).x, stroke.points.elementAt(0).y);
+            path.lineTo(stroke.points.elementAt(0).x, stroke.points.elementAt(0).y);
+            canvas.drawPath(path, paint);
+          }
+          break;
+        case ScratchGraphicsMode.circle:
+          if (stroke.points.length >= 2) {
+            canvas.drawCircle(
+              Offset(stroke.points.elementAt(0).x, stroke.points.elementAt(0).y),
+              stroke.points.elementAt(0).distanceTo(stroke.points.elementAt(1)),
+              paint,
+            );
+          }
+          break;
+        default:
+          var path = Path()
+            ..fillType = PathFillType.evenOdd;
+          path.moveTo(stroke.points.elementAt(0).x, stroke.points.elementAt(0).y);
+          for (var i=1;i<stroke.points.length;i++) {
+            path.lineTo(stroke.points.elementAt(i).x, stroke.points.elementAt(i).y);
+          }
+          canvas.drawPath(path, paint);
+          break;
+      }
+      break;
+    default:
+      var path = Path()
+        ..fillType = PathFillType.evenOdd;
+      path.moveTo(stroke.points.elementAt(0).x, stroke.points.elementAt(0).y);
+      for (var i=1;i<stroke.points.length;i++) {
+        path.lineTo(stroke.points.elementAt(i).x, stroke.points.elementAt(i).y);
+      }
+      canvas.drawPath(path, paint);
+      break;
   }
-  canvas.drawPath(path, paint);
 }
 
 void paintCanvas(BuildContext context, Canvas canvas, double scale, Point translate, ui.Image image, Offset offset, LinkedList<Stroke> strokes, Stroke currStroke, ScratchMode scratchMode, Point focalPoint, {bool disableClipRect = false}) {
@@ -231,7 +304,7 @@ class ScratchPaperState extends State<ScratchPaper> {
     return true;
   }
 
-  void set image(ui.Image img) {
+  set image(ui.Image img) {
     showAlertDialog(context, AppLocalizations.of(context).getLanguageText('importWillClear'), callback: () {
       setState(() {
         _image = img;
@@ -279,22 +352,61 @@ class ScratchPaperState extends State<ScratchPaper> {
     }
 
     for (var stroke in _strokes) {
-      for (var point in stroke.points) {
-        if (_leftTopBorder == null) {
-          _leftTopBorder = Offset(point.x - stroke.lineWeight, point.y - stroke.lineWeight);
-        } else if (_leftTopBorder.dx > point.x - stroke.lineWeight || _leftTopBorder.dy > point.y - stroke.lineWeight) {
-          _leftTopBorder = Offset(
-            _leftTopBorder.dx > point.x - stroke.lineWeight?point.x - stroke.lineWeight:_leftTopBorder.dx,
-            _leftTopBorder.dy > point.y - stroke.lineWeight?point.y - stroke.lineWeight:_leftTopBorder.dy,
-          );
+      if (stroke.scratchMode != ScratchMode.graphics || stroke.scratchGraphicsMode != ScratchGraphicsMode.circle) {
+        for (var point in stroke.points) {
+          if (_leftTopBorder == null) {
+            _leftTopBorder = Offset(
+                point.x - stroke.lineWeight, point.y - stroke.lineWeight);
+          } else if (_leftTopBorder.dx > point.x - stroke.lineWeight ||
+              _leftTopBorder.dy > point.y - stroke.lineWeight) {
+            _leftTopBorder = Offset(
+              _leftTopBorder.dx > point.x - stroke.lineWeight ? point.x -
+                  stroke.lineWeight : _leftTopBorder.dx,
+              _leftTopBorder.dy > point.y - stroke.lineWeight ? point.y -
+                  stroke.lineWeight : _leftTopBorder.dy,
+            );
+          }
+          if (_rightBottomBorder == null) {
+            _rightBottomBorder = Offset(
+                point.x + stroke.lineWeight, point.y + stroke.lineWeight);
+          } else if (_rightBottomBorder.dx < point.x + stroke.lineWeight ||
+              _rightBottomBorder.dy < point.y + stroke.lineWeight) {
+            _rightBottomBorder = Offset(
+              _rightBottomBorder.dx < point.x + stroke.lineWeight ? point.x +
+                  stroke.lineWeight : _rightBottomBorder.dx,
+              _rightBottomBorder.dy < point.y + stroke.lineWeight ? point.y +
+                  stroke.lineWeight : _rightBottomBorder.dy,
+            );
+          }
         }
-        if (_rightBottomBorder == null) {
-          _rightBottomBorder = Offset(point.x + stroke.lineWeight, point.y + stroke.lineWeight);
-        } else if (_rightBottomBorder.dx < point.x + stroke.lineWeight || _rightBottomBorder.dy < point.y + stroke.lineWeight) {
-          _rightBottomBorder = Offset(
-            _rightBottomBorder.dx < point.x + stroke.lineWeight?point.x + stroke.lineWeight:_rightBottomBorder.dx,
-            _rightBottomBorder.dy < point.y + stroke.lineWeight?point.y + stroke.lineWeight:_rightBottomBorder.dy,
-          );
+      } else {
+        if (stroke.points.length >= 2) {
+          var circleCenter = stroke.points.elementAt(0);
+          var radius = circleCenter.distanceTo(stroke.points.elementAt(1));
+          if (_leftTopBorder == null) {
+            _leftTopBorder = Offset(
+                circleCenter.x - radius - stroke.lineWeight, circleCenter.y - radius - stroke.lineWeight);
+          } else if (_leftTopBorder.dx > circleCenter.x - radius - stroke.lineWeight ||
+              _leftTopBorder.dy > circleCenter.y - radius - stroke.lineWeight) {
+            _leftTopBorder = Offset(
+              _leftTopBorder.dx > circleCenter.x - radius - stroke.lineWeight ? circleCenter.x - radius -
+                  stroke.lineWeight : _leftTopBorder.dx,
+              _leftTopBorder.dy > circleCenter.y - radius - stroke.lineWeight ? circleCenter.y - radius -
+                  stroke.lineWeight : _leftTopBorder.dy,
+            );
+          }
+          if (_rightBottomBorder == null) {
+            _rightBottomBorder = Offset(
+                circleCenter.x + radius + stroke.lineWeight, circleCenter.y + radius + stroke.lineWeight);
+          } else if (_rightBottomBorder.dx < circleCenter.x + radius + stroke.lineWeight ||
+              _rightBottomBorder.dy < circleCenter.y + radius + stroke.lineWeight) {
+            _rightBottomBorder = Offset(
+              _rightBottomBorder.dx < circleCenter.x + radius + stroke.lineWeight ? circleCenter.x + radius +
+                  stroke.lineWeight : _rightBottomBorder.dx,
+              _rightBottomBorder.dy < circleCenter.y + radius + stroke.lineWeight ? circleCenter.y + radius +
+                  stroke.lineWeight : _rightBottomBorder.dy,
+            );
+          }
         }
       }
     }
@@ -370,6 +482,8 @@ class ScratchPaperState extends State<ScratchPaper> {
               break;
             case ScratchMode.eraser:
               currStroke = Stroke(
+                scratchMode: widget.scratchMode,
+                scratchGraphicsMode: widget.scratchGraphicsMode,
                 points: LinkedList<Point>()..add(Point(
                   x: -translate.x + details.localFocalPoint.dx / scale,
                   y: -translate.y + details.localFocalPoint.dy / scale,
@@ -379,7 +493,10 @@ class ScratchPaperState extends State<ScratchPaper> {
               );
               break;
             case ScratchMode.edit:
+            case ScratchMode.graphics:
               currStroke = Stroke(
+                scratchMode: widget.scratchMode,
+                scratchGraphicsMode: widget.scratchGraphicsMode,
                 points: LinkedList<Point>()..add(Point(
                   x: -translate.x + details.localFocalPoint.dx / scale,
                   y: -translate.y + details.localFocalPoint.dy / scale,
@@ -425,22 +542,43 @@ class ScratchPaperState extends State<ScratchPaper> {
               lastPoint = currPoint;
               setState(() {});
               break;
+            case ScratchMode.graphics:
+              var currPoint = Point(x: -translate.x + details.localFocalPoint.dx / scale, y: -translate.y + details.localFocalPoint.dy / scale);
+
+              // 根据图形类型来绘画
+              switch (widget.scratchGraphicsMode) {
+                case ScratchGraphicsMode.line:
+                case ScratchGraphicsMode.square:
+                case ScratchGraphicsMode.circle:
+                  while (currStroke.points.length > 1) {
+                    currStroke.points.remove(currStroke.points.last);
+                  }
+                  currStroke.points.add(currPoint);
+                  setState(() {});
+                  break;
+                default:
+                  break;
+              }
+              break;
           }
         },
         onScaleEnd: (details) {
           switch (widget.scratchMode) {
             case ScratchMode.unknow:
+              currStroke = null;
               break;
             case ScratchMode.eraser:
             case ScratchMode.edit:
+            case ScratchMode.graphics:
               strokes.add(currStroke);
               undoStrokes.clear();
               _checkStrokes();
+              currStroke = null;
               break;
             case ScratchMode.move:
+              currStroke = null;
               break;
           }
-          currStroke = null;
           lastPoint = null;
           setState(() {});
           if (nextMode != ScratchMode.unknow) {
@@ -470,17 +608,25 @@ class Point extends LinkedListEntry<Point> {
   final double x, y;
 
   Point({@required this.x, @required this.y});
+
+  double distanceTo(Point p2) {
+    return math.sqrt(math.pow(x - p2.x, 2) + math.pow(y - p2.y, 2));
+  }
 }
 
 class Stroke extends LinkedListEntry<Stroke> {
+  final ScratchMode scratchMode;
+  final ScratchGraphicsMode scratchGraphicsMode;
   final LinkedList<Point> points;
   final Color color;
   final double lineWeight;
 
-  Stroke({@required this.points, @required this.color, @required this.lineWeight});
+  Stroke({@required this.scratchMode, @required this.scratchGraphicsMode, @required this.points, @required this.color, @required this.lineWeight});
 
   Stroke clone() {
     return Stroke(
+      scratchMode: scratchMode,
+      scratchGraphicsMode: scratchGraphicsMode,
       points: this.points,
       color: this.color,
       lineWeight: this.lineWeight,

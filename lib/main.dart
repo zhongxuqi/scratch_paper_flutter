@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:scratch_paper_flutter/utils/iconfonts.dart';
@@ -63,7 +64,8 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  final scratchModes = <ScratchMode>[ScratchMode.edit, ScratchMode.move, ScratchMode.eraser];
+  final scratchModes = <ScratchMode>[ScratchMode.edit, ScratchMode.move, ScratchMode.eraser, ScratchMode.graphics];
+  final scratchGraphicsModes = <ScratchGraphicsMode>[ScratchGraphicsMode.line, ScratchGraphicsMode.square, ScratchGraphicsMode.circle, ScratchGraphicsMode.polygon];
   final GlobalKey<ScratchPaperState> _scratchPaperState = new GlobalKey<ScratchPaperState>();
 
   static const MaterialColor black = MaterialColor(
@@ -95,6 +97,7 @@ class _MainPageState extends State<MainPage> {
     Colors.blueGrey,
   ];
   var scratchMode = ScratchMode.edit;
+  var scratchGraphicsMode = ScratchGraphicsMode.line;
   Color selectedColor = black;
   final lineWeights = <double>[1, 2, 4, 6, 8, 10];
   double selectedLineWeight = 2;
@@ -109,7 +112,7 @@ class _MainPageState extends State<MainPage> {
         appId: "wx27f355795896793b", doOnAndroid: true, doOnIOS: true);
   }
 
-  Future<bool> _onWillPop(){
+  Future<bool> _onWillPop() {
     if (_scratchPaperState.currentState != null && _scratchPaperState.currentState.strokes.length > 0) {
       showAlertDialog(context, AppLocalizations.of(context).getLanguageText('exitAlert'), callback: () {
         SystemNavigator.pop();
@@ -137,6 +140,7 @@ class _MainPageState extends State<MainPage> {
                 child: ScratchPaper(
                   key: _scratchPaperState,
                   scratchMode: scratchMode,
+                  scratchGraphicsMode: scratchGraphicsMode,
                   selectedColor: selectedColor,
                   selectedLineWeight: scratchMode==ScratchMode.eraser?eraserSelectedLineWeight:selectedLineWeight,
                   modeChanged: (newMode) {
@@ -159,14 +163,14 @@ class _MainPageState extends State<MainPage> {
                         child: Container(
                           padding: EdgeInsets.symmetric(horizontal: 15, vertical: 8),
                           decoration: BoxDecoration(
-                            color: ScratchMode2Color(scratchMode),
+                            color: scratchMode2Color(scratchMode),
                             borderRadius: BorderRadius.all(Radius.circular(999)),
                           ),
                           child: Row(
                             children: <Widget>[
                               Container(
                                 child: Icon(
-                                  ScratchMode2Icon(scratchMode),
+                                  scratchMode2Icon(scratchMode),
                                   color: Colors.white,
                                   size: 26,
                                 ),
@@ -181,7 +185,11 @@ class _MainPageState extends State<MainPage> {
                             ],
                           ),
                         ),
-                        onSelected: (ScratchMode result) { setState(() { scratchMode = result; }); },
+                        onSelected: (ScratchMode result) {
+                          setState(() {
+                            scratchMode = result;
+                          });
+                        },
                         itemBuilder: (BuildContext context) {
                           return scratchModes.map((item) {
                             return PopupMenuItem<ScratchMode>(
@@ -191,13 +199,13 @@ class _MainPageState extends State<MainPage> {
                                   Container(
                                     margin: EdgeInsets.only(right: 10),
                                     child: Icon(
-                                      ScratchMode2Icon(item),
+                                      scratchMode2Icon(item),
                                       color: Colors.black,
                                       size: 24,
                                     ),
                                   ),
                                   Text(
-                                    ScratchMode2Desc(context, item),
+                                    scratchMode2Desc(context, item),
                                     style: TextStyle(
                                       color: Colors.black,
                                       fontSize: 15,
@@ -407,6 +415,54 @@ class _MainPageState extends State<MainPage> {
                   ),
                 ),
               ),
+              scratchMode==ScratchMode.graphics?Positioned(
+                top: 0,
+                left: 10,
+                bottom: 0,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border.all(color: Colors.grey[100]),
+                        borderRadius: BorderRadius.all(Radius.circular(999)),
+                      ),
+                      alignment: Alignment.center,
+                      child: Column(
+                        children: scratchGraphicsModes.map((item) {
+                          var borderRadius = BorderRadius.zero;
+                          if (item == ScratchGraphicsMode.line) {
+                            borderRadius = BorderRadius.vertical(top: Radius.circular(999));
+                          } else if (item == ScratchGraphicsMode.polygon) {
+                            borderRadius = BorderRadius.vertical(bottom: Radius.circular(999));
+                          }
+                          return GestureDetector(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: item==scratchGraphicsMode?Colors.deepPurple:Colors.transparent,
+                                borderRadius: borderRadius,
+                              ),
+                              child: IconButton(
+                                icon: Icon(
+                                  scratchGraphicsMode2Icon(item),
+                                  size: 24,
+                                  color: item==scratchGraphicsMode?Colors.white:Colors.black,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    scratchGraphicsMode = item;
+                                  });
+                                },
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ],
+                ),
+              ):Container(),
             ]
           ),
         ),
