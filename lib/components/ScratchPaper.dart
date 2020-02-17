@@ -420,7 +420,7 @@ class ScratchPaperState extends State<ScratchPaper> {
       } else if (stroke.scratchMode == ScratchMode.text) {
         if (stroke.points.length > 0) {
           var leftTopPoint = Offset(stroke.points.first.x - stroke.lineWeight, stroke.points.first.y - stroke.lineWeight);
-          var rightBottomPoint = Offset(stroke.points.first.x + stroke.fontSize + stroke.lineWeight, stroke.points.first.y + stroke.text.length * stroke.fontSize + stroke.lineWeight);
+          var rightBottomPoint = Offset(stroke.points.first.x + stroke.text.length * stroke.fontSize + stroke.lineWeight, stroke.points.first.y + stroke.fontSize * 1.2 + stroke.lineWeight);
           if (_leftTopBorder == null) {
             _leftTopBorder = leftTopPoint;
           } else if (_leftTopBorder.dx > leftTopPoint.dx ||
