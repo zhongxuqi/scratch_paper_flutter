@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 import 'dart:math' as math;
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:scratch_paper_flutter/utils/iconfonts.dart';
 import '../utils/language.dart';
 import 'package:path_provider/path_provider.dart';
@@ -478,42 +479,48 @@ class ScratchPaperState extends State<ScratchPaper> {
           var rightBottomPoint = Offset(circleCenter.x + radius + stroke.lineWeight, circleCenter.y + radius + stroke.lineWeight);
           if (_leftTopBorder == null) {
             _leftTopBorder = leftTopPoint;
-          } else if (_leftTopBorder.dx > leftTopPoint.dx ||
-              _leftTopBorder.dy > leftTopPoint.dy) {
-            _leftTopBorder = Offset(
-              _leftTopBorder.dx > leftTopPoint.dx ? leftTopPoint.dx : _leftTopBorder.dx,
-              _leftTopBorder.dy > leftTopPoint.dy ? leftTopPoint.dy : _leftTopBorder.dy,
-            );
+          } else {
+            _leftTopBorder = Offset(math.min(_leftTopBorder.dx, leftTopPoint.dx), math.min(_leftTopBorder.dy, leftTopPoint.dy));
           }
           if (_rightBottomBorder == null) {
             _rightBottomBorder = rightBottomPoint;
-          } else if (_rightBottomBorder.dx < rightBottomPoint.dx || _rightBottomBorder.dy < rightBottomPoint.dy) {
-            _rightBottomBorder = Offset(
-              _rightBottomBorder.dx < rightBottomPoint.dx ? rightBottomPoint.dx : _rightBottomBorder.dx,
-              _rightBottomBorder.dy < rightBottomPoint.dy ? rightBottomPoint.dy : _rightBottomBorder.dy,
-            );
+          } else {
+            _rightBottomBorder = Offset(math.max(_rightBottomBorder.dx, rightBottomPoint.dx), math.max(_rightBottomBorder.dy, rightBottomPoint.dy));
           }
         }
       } else if (stroke.scratchMode == ScratchMode.text) {
         if (stroke.points.length > 0) {
-          var leftTopPoint = Offset(stroke.points.first.x - stroke.lineWeight, stroke.points.first.y - stroke.lineWeight);
-          var rightBottomPoint = Offset(stroke.points.first.x + stroke.text.length * stroke.fontSize + stroke.lineWeight, stroke.points.first.y + stroke.fontSize * 1.2 + stroke.lineWeight);
+          var leftTopPoint = Offset(stroke.points.first.x - stroke.lineWeight,
+              stroke.points.first.y - stroke.lineWeight);
+          var rightBottomPoint = Offset(
+              stroke.points.first.x + stroke.text.length * stroke.fontSize +
+                  stroke.lineWeight,
+              stroke.points.first.y + stroke.fontSize * 1.2 +
+                  stroke.lineWeight);
           if (_leftTopBorder == null) {
             _leftTopBorder = leftTopPoint;
-          } else if (_leftTopBorder.dx > leftTopPoint.dx ||
-              _leftTopBorder.dy > leftTopPoint.dy) {
-            _leftTopBorder = Offset(
-              _leftTopBorder.dx > leftTopPoint.dx ? leftTopPoint.dx : _leftTopBorder.dx,
-              _leftTopBorder.dy > leftTopPoint.dy ? leftTopPoint.dy : _leftTopBorder.dy,
-            );
+          } else {
+            _leftTopBorder = Offset(math.min(_leftTopBorder.dx, leftTopPoint.dx), math.min(_leftTopBorder.dy, leftTopPoint.dy));
           }
           if (_rightBottomBorder == null) {
             _rightBottomBorder = rightBottomPoint;
-          } else if (_rightBottomBorder.dx < rightBottomPoint.dx || _rightBottomBorder.dy < rightBottomPoint.dy) {
-            _rightBottomBorder = Offset(
-              _rightBottomBorder.dx < rightBottomPoint.dx ? rightBottomPoint.dx : _rightBottomBorder.dx,
-              _rightBottomBorder.dy < rightBottomPoint.dy ? rightBottomPoint.dy : _rightBottomBorder.dy,
-            );
+          } else {
+            _rightBottomBorder = Offset(math.max(_rightBottomBorder.dx, rightBottomPoint.dx), math.max(_rightBottomBorder.dy, rightBottomPoint.dy));
+          }
+        }
+      } else if (stroke.scratchMode == ScratchMode.crop) {
+        if (stroke.points.length == 2) {
+          var leftTopPoint = Offset(stroke.points.first.x, stroke.points.first.y);
+          var rightBottomPoint = Offset(stroke.points.last.x, stroke.points.last.y);
+          if (_leftTopBorder == null) {
+            _leftTopBorder = leftTopPoint;
+          } else {
+            _leftTopBorder = Offset(math.min(_leftTopBorder.dx, leftTopPoint.dx), math.min(_leftTopBorder.dy, leftTopPoint.dy));
+          }
+          if (_rightBottomBorder == null) {
+            _rightBottomBorder = rightBottomPoint;
+          } else {
+            _rightBottomBorder = Offset(math.max(_rightBottomBorder.dx, rightBottomPoint.dx), math.max(_rightBottomBorder.dy, rightBottomPoint.dy));
           }
         }
       } else {
@@ -522,20 +529,13 @@ class ScratchPaperState extends State<ScratchPaper> {
           var rightBottomPoint = Offset(point.x + stroke.lineWeight, point.y + stroke.lineWeight);
           if (_leftTopBorder == null) {
             _leftTopBorder = leftTopPoint;
-          } else if (_leftTopBorder.dx > leftTopPoint.dx ||
-              _leftTopBorder.dy > leftTopPoint.dy) {
-            _leftTopBorder = Offset(
-              _leftTopBorder.dx > leftTopPoint.dx ? leftTopPoint.dx : _leftTopBorder.dx,
-              _leftTopBorder.dy > leftTopPoint.dy ? leftTopPoint.dy : _leftTopBorder.dy,
-            );
+          } else {
+            _leftTopBorder = Offset(math.min(_leftTopBorder.dx, leftTopPoint.dx), math.min(_leftTopBorder.dy, leftTopPoint.dy));
           }
           if (_rightBottomBorder == null) {
             _rightBottomBorder = rightBottomPoint;
-          } else if (_rightBottomBorder.dx < rightBottomPoint.dx || _rightBottomBorder.dy < rightBottomPoint.dy) {
-            _rightBottomBorder = Offset(
-              _rightBottomBorder.dx < rightBottomPoint.dx ? rightBottomPoint.dx : _rightBottomBorder.dx,
-              _rightBottomBorder.dy < rightBottomPoint.dy ? rightBottomPoint.dy : _rightBottomBorder.dy,
-            );
+          } else {
+            _rightBottomBorder = Offset(math.max(_rightBottomBorder.dx, rightBottomPoint.dx), math.max(_rightBottomBorder.dy, rightBottomPoint.dy));
           }
         }
       }
