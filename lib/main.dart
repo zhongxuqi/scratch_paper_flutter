@@ -64,7 +64,7 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  final scratchModes = <ScratchMode>[ScratchMode.edit, ScratchMode.move, ScratchMode.eraser, ScratchMode.graphics, ScratchMode.text];
+  final scratchModes = <ScratchMode>[ScratchMode.edit, ScratchMode.move, ScratchMode.eraser, ScratchMode.graphics, ScratchMode.text, ScratchMode.crop];
   final scratchGraphicsModes = <ScratchGraphicsMode>[ScratchGraphicsMode.line, ScratchGraphicsMode.square, ScratchGraphicsMode.circle, ScratchGraphicsMode.polygon];
   final GlobalKey<ScratchPaperState> _scratchPaperState = new GlobalKey<ScratchPaperState>();
 
@@ -501,7 +501,7 @@ class _MainPageState extends State<MainPage> {
                     ),
                     placeholder: AppLocalizations.of(context).getLanguageText('inputHint'),
                     style: TextStyle(
-                      fontSize: fontSize,
+                      fontSize: fontSize * _scratchPaperState.currentState.scale,
                       color: selectedColor,
                       textBaseline: TextBaseline.alphabetic,
                     ),

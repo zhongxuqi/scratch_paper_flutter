@@ -21,6 +21,7 @@ enum ScratchMode {
   eraser,
   graphics,
   text,
+  crop,
 }
 
 IconData scratchMode2Icon(ScratchMode mode) {
@@ -37,6 +38,8 @@ IconData scratchMode2Icon(ScratchMode mode) {
       return IconFonts.ruler;
     case ScratchMode.text:
       return IconFonts.text;
+    case ScratchMode.crop:
+      return IconFonts.crop;
   }
   return null;
 }
@@ -55,6 +58,8 @@ String scratchMode2Desc(BuildContext context, ScratchMode mode) {
       return AppLocalizations.of(context).getLanguageText('graphics');
     case ScratchMode.text:
       return AppLocalizations.of(context).getLanguageText('text');
+    case ScratchMode.crop:
+      return AppLocalizations.of(context).getLanguageText('crop');
   }
   return null;
 }
@@ -73,6 +78,8 @@ Color scratchMode2Color(ScratchMode mode) {
       return Colors.deepPurple;
     case ScratchMode.text:
       return Colors.teal;
+    case ScratchMode.crop:
+      return Colors.black38;
   }
   return null;
 }
@@ -194,6 +201,8 @@ void drawStroke(Canvas canvas, Paint paint, Stroke stroke) {
             canvas, Offset(stroke.points.first.x, stroke.points.first.y));
       }
       break;
+    case ScratchMode.crop:
+      break;
     default:
       var path = Path()
         ..fillType = PathFillType.evenOdd;
@@ -235,9 +244,8 @@ void paintCanvas(BuildContext context, Canvas canvas, double scale, Point transl
 
     paint.strokeWidth = 10 / scale;
     canvas.drawPoints(ui.PointMode.points, <Offset>[Offset(0, 0)], paint);
-
-    paint.strokeWidth = 1 / scale;
     final width = 5 / scale;
+    paint.strokeWidth = 1 / scale;
 
     // draw horizontal lines
     for (var i = translate.y > 0 ?  - (translate.y.toInt() ~/ MediaQuery.of(context).size.height) : 1 + (-translate.y).toInt() ~/ MediaQuery.of(context).size.height; i * MediaQuery.of(context).size.height > -translate.y && i * MediaQuery.of(context).size.height < -translate.y + MediaQuery.of(context).size.height / scale; i++) {
@@ -250,16 +258,85 @@ void paintCanvas(BuildContext context, Canvas canvas, double scale, Point transl
     }
   }
 
-  if (image != null) {
-    canvas.drawImage(image, offset, paint);
+  final cropStrokes = <Stroke>[];
+  final noCropStrokes = <LinkedList<Stroke>>[];
+
+  var tmpStrokes = LinkedList<Stroke>();
+  for (var stroke in strokes) {
+    if (stroke.scratchMode == ScratchMode.crop) {
+      cropStrokes.add(stroke);
+      noCropStrokes.add(tmpStrokes);
+      tmpStrokes = LinkedList<Stroke>();
+    } else {
+      tmpStrokes.add(stroke.clone());
+    }
+  }
+  noCropStrokes.add(tmpStrokes);
+
+  var index = 0;
+  for (; index < cropStrokes.length; index++) {
+    canvas.save();
+    Point leftTopBorder, rightTopBorder;
+    for (var i = index; i < cropStrokes.length; i++) {
+      final cropStroke = cropStrokes[i];
+      if (cropStroke.points.length != 2) continue;
+      if (leftTopBorder == null) {
+        leftTopBorder = Point(
+          x: math.min(cropStroke.points.first.x, cropStroke.points.last.x),
+          y: math.min(cropStroke.points.first.y, cropStroke.points.last.y),
+        );
+      } else {
+        leftTopBorder = Point(
+          x: math.min(rightTopBorder.x, math.max(leftTopBorder.x, math.min(cropStroke.points.first.x, cropStroke.points.last.x))),
+          y: math.min(rightTopBorder.y, math.max(leftTopBorder.y, math.min(cropStroke.points.first.y, cropStroke.points.last.y))),
+        );
+      }
+      if (rightTopBorder == null) {
+        rightTopBorder = Point(
+          x: math.max(cropStroke.points.first.x, cropStroke.points.last.x),
+          y: math.max(cropStroke.points.first.y, cropStroke.points.last.y),
+        );
+      } else {
+        rightTopBorder = Point(
+          x: math.max(leftTopBorder.x, math.min(rightTopBorder.x, math.max(cropStroke.points.first.x, cropStroke.points.last.x))),
+          y: math.max(leftTopBorder.y, math.min(rightTopBorder.y, math.max(cropStroke.points.first.y, cropStroke.points.last.y))),
+        );
+      }
+    }
+    canvas.clipRect(Rect.fromPoints(Offset(leftTopBorder.x, leftTopBorder.y), Offset(rightTopBorder.x, rightTopBorder.y)));
+    if (index == 0) {
+      if (image != null) {
+        canvas.drawImage(image, offset, paint);
+      }
+    }
+    for (var stroke in noCropStrokes[index]) {
+      drawStroke(canvas, paint, stroke);
+    }
+    canvas.restore();
   }
 
-  for (var stroke in strokes) {
-    drawStroke(canvas, paint, stroke);
+  if (index == 0) {
+    if (image != null) {
+      canvas.drawImage(image, offset, paint);
+    }
+  }
+  if (index < noCropStrokes.length) {
+    for (var stroke in noCropStrokes[index]) {
+      drawStroke(canvas, paint, stroke);
+    }
   }
 
   if (currStroke != null) {
-    drawStroke(canvas, paint, currStroke);
+    if (currStroke.scratchMode == ScratchMode.crop && currStroke.points.length == 2) {
+      final width = 5 / scale;
+      paint.color = scratchMode2Color(ScratchMode.crop);
+      drawDash(canvas, paint, Offset(currStroke.points.first.x, currStroke.points.first.y), Offset(currStroke.points.first.x, currStroke.points.last.y), width);
+      drawDash(canvas, paint, Offset(currStroke.points.first.x, currStroke.points.last.y), Offset(currStroke.points.last.x, currStroke.points.last.y), width);
+      drawDash(canvas, paint, Offset(currStroke.points.last.x, currStroke.points.last.y), Offset(currStroke.points.last.x, currStroke.points.first.y), width);
+      drawDash(canvas, paint, Offset(currStroke.points.last.x, currStroke.points.first.y), Offset(currStroke.points.first.x, currStroke.points.first.y), width);
+    } else {
+      drawStroke(canvas, paint, currStroke);
+    }
 
     // 如果是多边形就标记一下
     if (!isExport && currStroke.scratchMode == ScratchMode.graphics &&
@@ -562,6 +639,7 @@ class ScratchPaperState extends State<ScratchPaper> {
               break;
             case ScratchMode.edit:
             case ScratchMode.graphics:
+            case ScratchMode.crop:
               switch (widget.scratchGraphicsMode) {
                 case ScratchGraphicsMode.polygon:
                   var currPoint = Point(
@@ -608,16 +686,16 @@ class ScratchPaperState extends State<ScratchPaper> {
           }
         },
         onScaleUpdate: (details) {
+          if (widget.scratchMode != ScratchMode.move && details.scale != 1) {
+            nextMode = widget.scratchMode;
+            modeChanged(ScratchMode.move);
+            return;
+          }
           switch (widget.scratchMode) {
             case ScratchMode.unknow:
               break;
             case ScratchMode.eraser:
             case ScratchMode.edit:
-              if (details.scale != 1) {
-                nextMode = widget.scratchMode;
-                modeChanged(ScratchMode.move);
-                break;
-              }
               currStroke.points.add(Point(x: -translate.x + details.localFocalPoint.dx / scale, y: -translate.y + details.localFocalPoint.dy / scale));
               lastPoint = Point(x: details.localFocalPoint.dx, y: details.localFocalPoint.dy);
               setState(() {});
@@ -644,6 +722,7 @@ class ScratchPaperState extends State<ScratchPaper> {
               setState(() {});
               break;
             case ScratchMode.graphics:
+            case ScratchMode.crop:
               var currPoint = Point(x: -translate.x + details.localFocalPoint.dx / scale, y: -translate.y + details.localFocalPoint.dy / scale);
 
               // 多边形特殊逻辑
@@ -680,6 +759,7 @@ class ScratchPaperState extends State<ScratchPaper> {
             case ScratchMode.eraser:
             case ScratchMode.edit:
             case ScratchMode.graphics:
+            case ScratchMode.crop:
               strokes.add(currStroke);
               undoStrokes.clear();
               _checkStrokes();
@@ -756,6 +836,8 @@ class Stroke extends LinkedListEntry<Stroke> {
       points: this.points,
       color: this.color,
       lineWeight: this.lineWeight,
+      text: this.text,
+      fontSize: this.fontSize,
     );
   }
 }
