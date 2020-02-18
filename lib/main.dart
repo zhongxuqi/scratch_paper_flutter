@@ -15,6 +15,8 @@ import 'package:multi_image_picker/multi_image_picker.dart';
 import 'dart:ui' as ui;
 import 'package:permission_handler/permission_handler.dart';
 import 'components/alertDialog.dart';
+import './net/mypass.dart' as mypass;
+import 'dart:convert';
 
 void main() => runApp(MyApp());
 
@@ -391,10 +393,21 @@ class _MainPageState extends State<MainPage> {
                                 ));
                               }
                               break;
+                            case MoreAction.feedback:
+                              showFeedbackDialog(context, callback: (msg) {
+                                mypass.feedback(msg).then((resp) {
+                                  Map<String, dynamic> respObj = json.decode(utf8.decode(resp.bodyBytes));
+                                  if (respObj['errno'] != 0) {
+                                    return;
+                                  }
+                                  showSuccessToast(AppLocalizations.of(context).getLanguageText('thankFeedback'));
+                                });
+                              });
+                              break;
                           }
                         },
                         itemBuilder: (BuildContext context) {
-                          return <MoreAction>[MoreAction.backOrigin, MoreAction.clear, MoreAction.import, MoreAction.export, MoreAction.gallery, MoreAction.wechat].map((item) {
+                          return <MoreAction>[MoreAction.backOrigin, MoreAction.clear, MoreAction.import, MoreAction.export, MoreAction.gallery, MoreAction.wechat, MoreAction.feedback].map((item) {
                             return PopupMenuItem<MoreAction>(
                               value: item,
                               child: Row(
@@ -581,6 +594,51 @@ class _MainPageState extends State<MainPage> {
             ),
           ),
         ),
+        Positioned(
+          top: 0,
+          left: 0,
+          bottom: 0,
+          right: 0,
+          child: Container(
+            color: Colors.black38,
+            child: AlertDialog(
+              titlePadding: EdgeInsets.symmetric(vertical: 8, horizontal: 15),
+              contentPadding: EdgeInsets.all(0),
+              content: Container(
+                margin: EdgeInsets.all(10),
+                child: Text(
+                  AppLocalizations.of(context).getLanguageText('freeExpired'),
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.green,
+                  ),
+                ),
+              ),
+              actions: <Widget>[
+                RawMaterialButton(
+                  child: Text(
+                    AppLocalizations.of(context).getLanguageText('exit'),
+                    style: TextStyle(
+                      color: Colors.grey,
+                    ),
+                  ),
+                  onPressed: () {
+                  },
+                ),
+                RawMaterialButton(
+                    child: Text(
+                      AppLocalizations.of(context).getLanguageText('showAds'),
+                      style: TextStyle(
+                        color: Colors.green,
+                      ),
+                    ),
+                    onPressed: () {
+                    }
+                ),
+              ],
+            ),
+          ),
+        ),
       ]
     );
     if (scratchMode == ScratchMode.text) {
@@ -616,6 +674,7 @@ enum MoreAction {
   export,
   gallery,
   wechat,
+  feedback,
 }
 
 IconData MoreAction2Icon(MoreAction action) {
@@ -632,6 +691,8 @@ IconData MoreAction2Icon(MoreAction action) {
       return IconFonts.gallery;
     case MoreAction.wechat:
       return IconFonts.wechat;
+    case MoreAction.feedback:
+      return IconFonts.feedback;
   }
   return null;
 }
@@ -650,6 +711,8 @@ String MoreAction2Desc(BuildContext context, MoreAction action) {
       return AppLocalizations.of(context).getLanguageText('save2Gallery');
     case MoreAction.wechat:
       return AppLocalizations.of(context).getLanguageText('shareWechat');
+    case MoreAction.feedback:
+      return AppLocalizations.of(context).getLanguageText('feedback');
   }
   return null;
 }

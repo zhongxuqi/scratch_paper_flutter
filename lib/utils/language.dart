@@ -35,6 +35,12 @@ class AppLocalizations {
       'text': 'Text',
       'inputHint': 'Input text',
       'crop': 'Crop',
+      'feedback': 'Feedback',
+      'inputTextHint': 'Please input text',
+      'thankFeedback': 'Thank you for your feedback',
+      'freeExpired': 'APP free time has expired',
+      'exit': 'Exit APP',
+      'showAds': 'See video ads for one day free',
     },
     'zh': {
       'edit': '编辑',
@@ -59,6 +65,12 @@ class AppLocalizations {
       'text': '文本',
       'inputHint': '输入文本',
       'crop': '裁剪',
+      'feedback': '反馈',
+      'inputTextHint': '请出入内容',
+      'thankFeedback': '感谢您的反馈',
+      'freeExpired': 'APP免费使用已到期',
+      'exit': '退出APP',
+      'showAds': '观看视频广告（免费再用1天）',
     }
   };
 
