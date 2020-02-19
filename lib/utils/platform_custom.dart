@@ -20,3 +20,23 @@ Future<String> showVideoAds() async {
     print("error: ${e.message}.");
   }
 }
+
+Future<String> loginQQ() async {
+  try {
+    var result = await platform.invokeMethod('loginQQ', {});
+    return result.toString();
+  } on PlatformException catch (e) {
+    print("error: ${e.message}.");
+  }
+  return "";
+}
+
+Future<String> loginWeibo() async {
+  try {
+    var result = await platform.invokeMethod('loginWeibo', {});
+    return result.toString();
+  } on PlatformException catch (e) {
+    print("error: ${e.message}.");
+  }
+  return "";
+}

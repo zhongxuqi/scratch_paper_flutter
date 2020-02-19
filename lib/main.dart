@@ -372,6 +372,58 @@ class _MainPageState extends State<MainPage> {
                         onSelected: (MoreAction result) async {
                           if (_scratchPaperState.currentState == null) return;
                           switch (result) {
+                            case MoreAction.user:
+                              showModalBottomSheet(
+                                context: context,
+                                builder: (context) {
+                                  return Container(
+                                    color: Colors.white,
+                                    height: 150.0,
+                                    child: Column(
+                                      children: <Widget>[
+                                        Container(
+                                          alignment: Alignment.centerLeft,
+                                          child: Padding(
+                                            child: Text(
+                                              AppLocalizations.of(context).getLanguageText('thirdPartyLogin'),
+                                              style: TextStyle(fontSize:17, color: Colors.grey),
+                                            ),
+                                            padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                                          ),
+                                        ),
+                                        Divider(color: Colors.grey[300], height: 1,),
+                                        Container(
+                                          padding: EdgeInsets.fromLTRB(25.0, 15.0, 25.0, 15.0),
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: <Widget>[
+                                              Expanded(
+                                                flex:1,
+                                                child:GestureDetector(
+                                                  child: Image.asset('images/QQ.png', height: 50.0, width: 50.0,),
+                                                  onTap: () {
+                                                    user.loginQQ();
+                                                  }
+                                                ),
+                                              ),
+                                              Expanded(
+                                                flex:1,
+                                                child:GestureDetector(
+                                                    child: Image.asset('images/weibo.png', height: 50.0, width: 50.0,),
+                                                    onTap: () {
+                                                      user.loginWeibo();
+                                                    }
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              );
+                              break;
                             case MoreAction.backOrigin:
                               _scratchPaperState.currentState.backOrigin();
                               break;
@@ -434,7 +486,31 @@ class _MainPageState extends State<MainPage> {
                           }
                         },
                         itemBuilder: (BuildContext context) {
-                          return <MoreAction>[MoreAction.backOrigin, MoreAction.clear, MoreAction.import, MoreAction.export, MoreAction.gallery, MoreAction.wechat, MoreAction.feedback].map((item) {
+                          return <MoreAction>[MoreAction.user, MoreAction.backOrigin, MoreAction.clear, MoreAction.import, MoreAction.export, MoreAction.gallery, MoreAction.wechat, MoreAction.feedback].map((item) {
+                            if (item == MoreAction.user) {
+                              return PopupMenuItem<MoreAction>(
+                                value: item,
+                                child: Row(
+                                  children: <Widget>[
+                                    Container(
+                                      margin: EdgeInsets.only(right: 10),
+                                      child: Image.asset(
+                                        'images/default_head.png',
+                                        height: 30.0,
+                                        width: 30.0,
+                                      ),
+                                    ),
+                                    Text(
+                                      AppLocalizations.of(context).getLanguageText('clickLogin'),
+                                      style: TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }
                             return PopupMenuItem<MoreAction>(
                               value: item,
                               child: Row(
@@ -697,6 +773,7 @@ class _MainPageState extends State<MainPage> {
 }
 
 enum MoreAction {
+  user,
   backOrigin,
   clear,
   import,
@@ -722,8 +799,9 @@ IconData MoreAction2Icon(MoreAction action) {
       return IconFonts.wechat;
     case MoreAction.feedback:
       return IconFonts.feedback;
+    default:
+      return null;
   }
-  return null;
 }
 
 String MoreAction2Desc(BuildContext context, MoreAction action) {
@@ -742,6 +820,7 @@ String MoreAction2Desc(BuildContext context, MoreAction action) {
       return AppLocalizations.of(context).getLanguageText('shareWechat');
     case MoreAction.feedback:
       return AppLocalizations.of(context).getLanguageText('feedback');
+    default:
+      return null;
   }
-  return null;
 }

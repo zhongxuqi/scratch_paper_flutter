@@ -42,6 +42,8 @@ class AppLocalizations {
       'exit': 'Exit APP',
       'showAds': 'See video ads for one day free',
       'videoFailHint': 'Please watch the video',
+      'clickLogin': 'Click to login',
+      'thirdPartyLogin': 'Third Party Login',
     },
     'zh': {
       'edit': '编辑',
@@ -73,6 +75,8 @@ class AppLocalizations {
       'exit': '退出APP',
       'showAds': '观看视频广告（免费再用1天）',
       'videoFailHint': '请看完视频广告',
+      'clickLogin': '点击登录',
+      'thirdPartyLogin': '第三方登录',
     }
   };
 
