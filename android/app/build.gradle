@@ -73,7 +73,6 @@ flutter {
 }
 
 dependencies {
-    implementation fileTree('libs/android-query-full.0.26.7.jar')
     implementation fileTree(dir: 'libs', include: ['*.aar'])
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation  'com.umeng.umsdk:analytics:8.1.3'

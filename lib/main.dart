@@ -18,6 +18,7 @@ import 'components/alertDialog.dart';
 import './net/mypass.dart' as mypass;
 import 'dart:convert';
 import './utils/platform_custom.dart' as platform_custom;
+import './utils/user.dart' as user;
 
 void main() => runApp(MyApp());
 
@@ -71,6 +72,7 @@ class _MainPageState extends State<MainPage> {
   final scratchGraphicsModes = <ScratchGraphicsMode>[ScratchGraphicsMode.line, ScratchGraphicsMode.square, ScratchGraphicsMode.circle, ScratchGraphicsMode.polygon];
   final GlobalKey<ScratchPaperState> _scratchPaperState = new GlobalKey<ScratchPaperState>();
 
+  var freeExpired = false;
   static const MaterialColor black = MaterialColor(
     0xFF000000,
     <int, Color>{
@@ -120,6 +122,30 @@ class _MainPageState extends State<MainPage> {
     super.initState();
     fluwx.registerWxApi(
         appId: "wx27f355795896793b", doOnAndroid: true, doOnIOS: true);
+    checkFreeExpied();
+  }
+
+  void checkFreeExpied() async {
+    var ret = await user.isFreeExpired();
+    setState(() {
+      freeExpired = ret;
+    });
+  }
+
+  void showVideoAds() async {
+    var result = await platform_custom.showVideoAds();
+    if (result == 'wait') {
+      showVideoAds();
+      return;
+    } else if (result == 'fail') {
+      showErrorToast(AppLocalizations.of(context).getLanguageText('videoFailHint'));
+      return;
+    } else {
+      user.addFreeExpired(1);
+      setState(() {
+        freeExpired = false;
+      });
+    }
   }
 
   Future<bool> _onWillPop() {
@@ -595,7 +621,7 @@ class _MainPageState extends State<MainPage> {
             ),
           ),
         ),
-        Positioned(
+        freeExpired?Positioned(
           top: 0,
           left: 0,
           bottom: 0,
@@ -624,6 +650,7 @@ class _MainPageState extends State<MainPage> {
                     ),
                   ),
                   onPressed: () {
+                    SystemNavigator.pop();
                   },
                 ),
                 RawMaterialButton(
@@ -633,15 +660,14 @@ class _MainPageState extends State<MainPage> {
                       color: Colors.green,
                     ),
                   ),
-                  onPressed: () async {
-                    var result = await platform_custom.showVideoAds();
-                    print("===>>> $result");
+                  onPressed: () {
+                    showVideoAds();
                   }
                 ),
               ],
             ),
           ),
-        ),
+        ):Container(),
       ]
     );
     if (scratchMode == ScratchMode.text) {

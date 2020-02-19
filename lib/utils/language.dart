@@ -41,6 +41,7 @@ class AppLocalizations {
       'freeExpired': 'APP free time has expired',
       'exit': 'Exit APP',
       'showAds': 'See video ads for one day free',
+      'videoFailHint': 'Please watch the video',
     },
     'zh': {
       'edit': '编辑',
@@ -71,6 +72,7 @@ class AppLocalizations {
       'freeExpired': 'APP免费使用已到期',
       'exit': '退出APP',
       'showAds': '观看视频广告（免费再用1天）',
+      'videoFailHint': '请看完视频广告',
     }
   };
 

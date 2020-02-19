@@ -26,7 +26,7 @@ class MainActivity: FlutterActivity(), RewardVideoADListener {
     var callbackResult: MethodChannel.Result? = null
 
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
-        GeneratedPluginRegistrant.registerWith(flutterEngine);
+        GeneratedPluginRegistrant.registerWith(flutterEngine)
 
         UMConfigure.init(this, "56ecff3ce0f55ac331000a80", "main", UMConfigure.DEVICE_TYPE_PHONE, null)
         MobclickAgent.setPageCollectionMode(MobclickAgent.PageMode.MANUAL)
@@ -102,7 +102,8 @@ class MainActivity: FlutterActivity(), RewardVideoADListener {
     }
 
     override fun onError(p0: AdError?) {
-
+        callbackResult?.success("fail")
+        callbackResult = null
     }
 
     override fun onADShow() {
