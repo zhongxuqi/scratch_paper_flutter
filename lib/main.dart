@@ -17,6 +17,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'components/alertDialog.dart';
 import './net/mypass.dart' as mypass;
 import 'dart:convert';
+import './utils/platform_custom.dart' as platform_custom;
 
 void main() => runApp(MyApp());
 
@@ -626,14 +627,16 @@ class _MainPageState extends State<MainPage> {
                   },
                 ),
                 RawMaterialButton(
-                    child: Text(
-                      AppLocalizations.of(context).getLanguageText('showAds'),
-                      style: TextStyle(
-                        color: Colors.green,
-                      ),
+                  child: Text(
+                    AppLocalizations.of(context).getLanguageText('showAds'),
+                    style: TextStyle(
+                      color: Colors.green,
                     ),
-                    onPressed: () {
-                    }
+                  ),
+                  onPressed: () async {
+                    var result = await platform_custom.showVideoAds();
+                    print("===>>> $result");
+                  }
                 ),
               ],
             ),
