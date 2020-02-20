@@ -44,6 +44,12 @@ class AppLocalizations {
       'videoFailHint': 'Please watch the video',
       'clickLogin': 'Click to login',
       'thirdPartyLogin': 'Third Party Login',
+      'logined': 'Logined',
+      'payAction': 'Buy to remove Ads forever ( 9.9 CNY )',
+      'payHint': 'Wechat pay url has generated. Please share to wechat, and then pay in wechat.',
+      'sharePayToWechat': 'Share Pay Url to Wechat and Pay',
+      'payUrl': 'ScratchPaper Wechat Pay URL',
+      'thankForPay': 'Thank you for support ScratchPaper',
     },
     'zh': {
       'edit': '编辑',
@@ -77,6 +83,12 @@ class AppLocalizations {
       'videoFailHint': '请看完视频广告',
       'clickLogin': '点击登录',
       'thirdPartyLogin': '第三方登录',
+      'logined': '已登录',
+      'payAction': '购买，永久去广告（9.9元）',
+      'payHint': '微信的支付链接已经生成。请分享链接到微信，然后在微信中支付。',
+      'sharePayToWechat': '分享支付链接到微信并支付',
+      'payUrl': '草稿本微信支付链接',
+      'thankForPay': '感谢您对草稿本的支持',
     }
   };
 

@@ -19,6 +19,7 @@ import './net/mypass.dart' as mypass;
 import 'dart:convert';
 import './utils/platform_custom.dart' as platform_custom;
 import './utils/user.dart' as user;
+import './common/consts.dart' as consts;
 
 void main() => runApp(MyApp());
 
@@ -117,6 +118,8 @@ class _MainPageState extends State<MainPage> {
   double fontSize = 12;
   final fontSizes = <double>[8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30];
 
+  var loginType = "";
+
   @override
   void initState() {
     super.initState();
@@ -126,10 +129,27 @@ class _MainPageState extends State<MainPage> {
   }
 
   void checkFreeExpied() async {
-    var ret = await user.isFreeExpired();
-    setState(() {
-      freeExpired = ret;
-    });
+    var userID = await user.getUserID();
+    loginType = await user.getUserType();
+    setState(() {});
+    freeExpired = await user.isFreeExpired();
+    if (loginType != '') {
+      mypass.postAccount(loginType, userID).then((resp) async {
+        Map<String, dynamic> respObj = json.decode(utf8.decode(resp.bodyBytes));
+        if (respObj['errno'] != 0) {
+          return;
+        }
+        var currTime = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+        if (respObj['data']['expire_time'] > currTime) {
+          await user.addFreeExpired(7);
+          freeExpired = await user.isFreeExpired();
+        }
+      }).whenComplete(() {
+        setState(() {});
+      });
+    } else {
+      setState(() {});
+    }
   }
 
   void showVideoAds() async {
@@ -167,8 +187,83 @@ class _MainPageState extends State<MainPage> {
     });
   }
 
+  void showLogin() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return Container(
+          color: Colors.white,
+          height: 150.0,
+          child: Column(
+            children: <Widget>[
+              Container(
+                alignment: Alignment.centerLeft,
+                child: Padding(
+                  child: Text(
+                    AppLocalizations.of(context).getLanguageText('thirdPartyLogin'),
+                    style: TextStyle(fontSize:17, color: Colors.grey),
+                  ),
+                  padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                ),
+              ),
+              Divider(color: Colors.grey[300], height: 1,),
+              Container(
+                padding: EdgeInsets.fromLTRB(25.0, 15.0, 25.0, 15.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Expanded(
+                      flex:1,
+                      child:GestureDetector(
+                          child: Image.asset('images/QQ.png', height: 50.0, width: 50.0,),
+                          onTap: () async {
+                            await user.loginQQ();
+                            loginType = await user.getUserType();
+                            setState(() {});
+                            if (loginType != '') {
+                              Navigator.of(context).pop();
+                            }
+                          }
+                      ),
+                    ),
+                    Expanded(
+                      flex:1,
+                      child:GestureDetector(
+                          child: Image.asset('images/weibo.png', height: 50.0, width: 50.0,),
+                          onTap: () async {
+                            await user.loginWeibo();
+                            loginType = await user.getUserType();
+                            setState(() {});
+                            if (loginType != '') {
+                              Navigator.of(context).pop();
+                            }
+                          }
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    var avator = 'images/default_head.png';
+    var nickname = AppLocalizations.of(context).getLanguageText('clickLogin');
+    switch (loginType) {
+      case "qq":
+        avator = 'images/QQ.png';
+        nickname = AppLocalizations.of(context).getLanguageText('logined');
+        break;
+      case "weibo":
+        avator = 'images/weibo.png';
+        nickname = AppLocalizations.of(context).getLanguageText('logined');
+        break;
+    }
     Widget body = Stack(
       children: <Widget>[
         Positioned(
@@ -373,56 +468,7 @@ class _MainPageState extends State<MainPage> {
                           if (_scratchPaperState.currentState == null) return;
                           switch (result) {
                             case MoreAction.user:
-                              showModalBottomSheet(
-                                context: context,
-                                builder: (context) {
-                                  return Container(
-                                    color: Colors.white,
-                                    height: 150.0,
-                                    child: Column(
-                                      children: <Widget>[
-                                        Container(
-                                          alignment: Alignment.centerLeft,
-                                          child: Padding(
-                                            child: Text(
-                                              AppLocalizations.of(context).getLanguageText('thirdPartyLogin'),
-                                              style: TextStyle(fontSize:17, color: Colors.grey),
-                                            ),
-                                            padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                                          ),
-                                        ),
-                                        Divider(color: Colors.grey[300], height: 1,),
-                                        Container(
-                                          padding: EdgeInsets.fromLTRB(25.0, 15.0, 25.0, 15.0),
-                                          child: Row(
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            children: <Widget>[
-                                              Expanded(
-                                                flex:1,
-                                                child:GestureDetector(
-                                                  child: Image.asset('images/QQ.png', height: 50.0, width: 50.0,),
-                                                  onTap: () {
-                                                    user.loginQQ();
-                                                  }
-                                                ),
-                                              ),
-                                              Expanded(
-                                                flex:1,
-                                                child:GestureDetector(
-                                                    child: Image.asset('images/weibo.png', height: 50.0, width: 50.0,),
-                                                    onTap: () {
-                                                      user.loginWeibo();
-                                                    }
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                },
-                              );
+                              showLogin();
                               break;
                             case MoreAction.backOrigin:
                               _scratchPaperState.currentState.backOrigin();
@@ -495,13 +541,13 @@ class _MainPageState extends State<MainPage> {
                                     Container(
                                       margin: EdgeInsets.only(right: 10),
                                       child: Image.asset(
-                                        'images/default_head.png',
+                                        avator,
                                         height: 30.0,
                                         width: 30.0,
                                       ),
                                     ),
                                     Text(
-                                      AppLocalizations.of(context).getLanguageText('clickLogin'),
+                                      nickname,
                                       style: TextStyle(
                                         color: Colors.black,
                                         fontSize: 15,
@@ -738,6 +784,87 @@ class _MainPageState extends State<MainPage> {
                   ),
                   onPressed: () {
                     showVideoAds();
+                  }
+                ),
+                RawMaterialButton(
+                  child: Text(
+                    AppLocalizations.of(context).getLanguageText('payAction'),
+                    style: TextStyle(
+                      color: Colors.orange,
+                    ),
+                  ),
+                  onPressed: () {
+                    if (loginType == '') {
+                      showLogin();
+                      return;
+                    }
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return SimpleDialog(
+                          children: <Widget>[
+                            Container(
+                              margin: EdgeInsets.only(bottom:10.0, left: 20.0, right: 20),
+                              child: Text(
+                                AppLocalizations.of(context).getLanguageText('payHint'),
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ),
+                            Row(
+                              children: <Widget>[
+                                Expanded(
+                                  flex: 1,
+                                  child: Container(
+                                    margin: EdgeInsets.symmetric(vertical:10.0, horizontal: 20.0),
+                                    child: GestureDetector(
+                                      child: Container(
+                                        padding: EdgeInsets.all(8.0),
+                                        decoration: BoxDecoration(
+                                          color: Colors.blue,
+                                          borderRadius: BorderRadius.all(Radius.circular(6.0)),
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            AppLocalizations.of(context).getLanguageText('sharePayToWechat'),
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 15.0,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      onTap: () async {
+                                        var userID = await user.getUserID();
+                                        var payjsUrl = "${mypass.url}/payjs.html?app_id=${consts.AppID}&platform_type=$loginType&account=$userID";
+                                        var model = fluwx.WeChatShareWebPageModel(
+                                            webPage: payjsUrl,
+                                            title: AppLocalizations.of(context).getLanguageText('payUrl'),
+                                            description: AppLocalizations.of(context).getLanguageText('thankForPay'),
+                                            thumbnail: "assets://images/logo.png",
+                                            scene: fluwx.WeChatScene.SESSION,
+                                            transaction: "scratchpaper");
+                                        try {
+                                          await fluwx.shareToWeChat(model);
+                                        } on PlatformException catch(e) {
+                                          print("error: ${e.toString()}.");
+                                          showErrorToast(AppLocalizations.of(context).getLanguageText(
+                                              'wechat_not_found'));
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        );
+                      },
+                    );
                   }
                 ),
               ],

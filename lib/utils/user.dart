@@ -1,9 +1,10 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 import './platform_custom.dart' as platform_custom;
+import 'dart:convert';
 
 final FreeExiredTimeKey = "free-expired-time";
-final DaySeconds = 24 * 3600;
+final DaySeconds = 10;
 
 final UserTypeKey = 'user-type';
 final UserExpiredTimeKey = 'user-expired-time';
@@ -22,16 +23,70 @@ Future<bool> isFreeExpired() async {
   return freeExpiredTs < currTime;
 }
 
-void addFreeExpired(int day) async {
+addFreeExpired(int day) async {
   var currTime = DateTime.now().millisecondsSinceEpoch ~/ 1000;
   var sharedPreference = await SharedPreferences.getInstance();
   sharedPreference.setInt(FreeExiredTimeKey, currTime + day * DaySeconds);
 }
 
-void loginQQ() async {
-  platform_custom.loginQQ();
+clearUserInfo() async {
+  await setUserType('');
+  await setUserID('');
 }
 
-void loginWeibo() async {
+setUserType(String t) async {
+  var sharedPreference = await SharedPreferences.getInstance();
+  sharedPreference.setString(UserTypeKey, t);
+}
+
+Future<String> getUserType() async {
+  var currTime = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+  var sharedPreference = await SharedPreferences.getInstance();
+  var expiredTime = await getUserExpiredTime();
+  if (currTime > expiredTime) {
+    await clearUserInfo();
+    return '';
+  }
+  var ret = sharedPreference.getString(UserTypeKey);
+  return ret==null?'':ret;
+}
+
+setUserExpiredTime(int t) async {
+  var sharedPreference = await SharedPreferences.getInstance();
+  sharedPreference.setInt(UserExpiredTimeKey, t);
+}
+
+Future<int> getUserExpiredTime() async {
+  var sharedPreference = await SharedPreferences.getInstance();
+  var ret = sharedPreference.getInt(UserExpiredTimeKey);
+  return ret==null?0:ret;
+}
+
+setUserID(String t) async {
+  var sharedPreference = await SharedPreferences.getInstance();
+  sharedPreference.setString(UserIDKey, t);
+}
+
+Future<String> getUserID() async {
+  var currTime = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+  var sharedPreference = await SharedPreferences.getInstance();
+  var expiredTime = await getUserExpiredTime();
+  if (currTime > expiredTime) {
+    await clearUserInfo();
+    return '';
+  }
+  var ret = sharedPreference.getString(UserIDKey);
+  return ret==null?'':ret;
+}
+
+loginQQ() async {
+  var result = await platform_custom.loginQQ();
+  Map<String, dynamic> qqUserInfo = json.decode(result);
+  await setUserType("qq");
+  await setUserExpiredTime((qqUserInfo['expires_time'] as int) ~/ 1000);
+  await setUserID(qqUserInfo['openid']);
+}
+
+loginWeibo() async {
   platform_custom.loginWeibo();
 }

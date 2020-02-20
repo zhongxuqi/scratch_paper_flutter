@@ -12,6 +12,7 @@ import com.sina.weibo.sdk.auth.Oauth2AccessToken
 import com.sina.weibo.sdk.auth.WbAuthListener
 import com.sina.weibo.sdk.auth.WbConnectErrorMessage
 import com.sina.weibo.sdk.auth.sso.SsoHandler
+import com.tencent.connect.common.Constants
 import com.tencent.tauth.IUiListener
 import com.tencent.tauth.Tencent
 import com.tencent.tauth.UiError
@@ -51,9 +52,6 @@ class MainActivity: FlutterActivity(), RewardVideoADListener, IUiListener, WbAut
         UMConfigure.init(this, "56ecff3ce0f55ac331000a80", "main", UMConfigure.DEVICE_TYPE_PHONE, null)
         MobclickAgent.setPageCollectionMode(MobclickAgent.PageMode.MANUAL)
 
-        // load reward video
-        rewardVideoAD.loadAD()
-
         WbSdk.install(this, mAuthInfo)
 
         MethodChannel(flutterEngine.dartExecutor, CHANNEL).setMethodCallHandler { call, result ->
@@ -81,10 +79,12 @@ class MainActivity: FlutterActivity(), RewardVideoADListener, IUiListener, WbAut
             } else if (call.method == "loginQQ") {
                 if (!mTencent.isSessionValid) {
                     mTencent.login(this, "all", this)
+                    callbackResult = result
                 }
             } else if (call.method == "loginWeibo") {
                 mSsoHandler = SsoHandler(this)
                 mSsoHandler?.authorize(this)
+                callbackResult = result
             }
         }
     }
@@ -143,23 +143,27 @@ class MainActivity: FlutterActivity(), RewardVideoADListener, IUiListener, WbAut
 
     // QQ登录
     override fun onError(p0: UiError?) {
-
+        callbackResult?.success("")
     }
 
     override fun onComplete(p0: Any?) {
-        Log.d("===>>>", p0.toString())
-        if (p0 is JSONObject) {
-            Log.d("===>>> JSONObject", p0.toString())
-        }
+        callbackResult?.success(p0.toString())
     }
 
     override fun onCancel() {
-
+        callbackResult?.success("")
     }
 
     // 微博
     override fun onSuccess(p0: Oauth2AccessToken?) {
-        Log.d("===>>>", p0!!.uid)
+        if (p0 != null) {
+            val jo = JSONObject()
+            jo.put("uid", p0.uid)
+            callbackResult?.success(jo.toString())
+//            mAuthInfo.
+//            jo.put("uid", p0!!.uid)
+//            Log.d("===>>>", p0!!.uid)
+        }
     }
 
     override fun onFailure(p0: WbConnectErrorMessage?) {
@@ -171,6 +175,9 @@ class MainActivity: FlutterActivity(), RewardVideoADListener, IUiListener, WbAut
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode == Constants.REQUEST_LOGIN) {
+            Tencent.onActivityResultData(requestCode, resultCode, data, this)
+        }
         super.onActivityResult(requestCode, resultCode, data)
         val ssoHandler = mSsoHandler
         if (ssoHandler != null) {
