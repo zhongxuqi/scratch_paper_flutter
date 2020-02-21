@@ -515,12 +515,18 @@ class ScratchPaperState extends State<ScratchPaper> {
           if (_leftTopBorder == null) {
             _leftTopBorder = leftTopPoint;
           } else {
-            _leftTopBorder = Offset(math.min(_leftTopBorder.dx, leftTopPoint.dx), math.min(_leftTopBorder.dy, leftTopPoint.dy));
+            _leftTopBorder = Offset(
+              math.min(math.max(_leftTopBorder.dx, leftTopPoint.dx), _rightBottomBorder.dx),
+              math.min(math.max(_leftTopBorder.dy, leftTopPoint.dy), _rightBottomBorder.dy),
+            );
           }
           if (_rightBottomBorder == null) {
             _rightBottomBorder = rightBottomPoint;
           } else {
-            _rightBottomBorder = Offset(math.max(_rightBottomBorder.dx, rightBottomPoint.dx), math.max(_rightBottomBorder.dy, rightBottomPoint.dy));
+            _rightBottomBorder = Offset(
+              math.max(math.min(_rightBottomBorder.dx, rightBottomPoint.dx), _leftTopBorder.dx),
+              math.max(math.min(_rightBottomBorder.dy, rightBottomPoint.dy), _leftTopBorder.dy),
+            );
           }
         }
       } else {

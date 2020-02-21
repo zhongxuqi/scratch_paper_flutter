@@ -37,9 +37,11 @@ class MainActivity: FlutterActivity(), RewardVideoADListener, IUiListener, WbAut
     }
 
     val mAuthInfo: AuthInfo by lazy {
-        AuthInfo(this, "2709929479", "http://sns.whalecloud.com/sina2/callback", "all")
+        AuthInfo(this, "2709929479", "http://sns.whalecloud.com/sina2/callback", "")
     }
-    var mSsoHandler: SsoHandler? = null
+    val mSsoHandler: SsoHandler by lazy {
+        SsoHandler(this)
+    }
 
     var adLoaded: Boolean = false
     var videoCached: Boolean = false
@@ -77,14 +79,15 @@ class MainActivity: FlutterActivity(), RewardVideoADListener, IUiListener, WbAut
                     result.success("wait")
                 }
             } else if (call.method == "loginQQ") {
-                if (!mTencent.isSessionValid) {
-                    mTencent.login(this, "all", this)
-                    callbackResult = result
-                }
-            } else if (call.method == "loginWeibo") {
-                mSsoHandler = SsoHandler(this)
-                mSsoHandler?.authorize(this)
+                mTencent.login(this, "all", this)
                 callbackResult = result
+            } else if (call.method == "loginWeibo") {
+                callbackResult = result
+                mSsoHandler.authorize(this)
+            } else if (call.method == "getInstallTime") {
+                val packageManager = applicationContext.packageManager
+                val packageInfo = packageManager.getPackageInfo(this.packageName, 0)
+                result.success(packageInfo.firstInstallTime.toString())
             }
         }
     }
@@ -156,32 +159,29 @@ class MainActivity: FlutterActivity(), RewardVideoADListener, IUiListener, WbAut
 
     // 微博
     override fun onSuccess(p0: Oauth2AccessToken?) {
+        Log.d("===>>> onSuccess", p0.toString())
         if (p0 != null) {
             val jo = JSONObject()
             jo.put("uid", p0.uid)
+            jo.put("expires_time", p0.expiresTime)
             callbackResult?.success(jo.toString())
-//            mAuthInfo.
-//            jo.put("uid", p0!!.uid)
-//            Log.d("===>>>", p0!!.uid)
         }
     }
 
     override fun onFailure(p0: WbConnectErrorMessage?) {
-
+        Log.d("===>>> onFailure", p0.toString())
     }
 
     override fun cancel() {
-
+        Log.d("===>>>", "cancel")
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        Log.d("===>>>", "onActivityResult $requestCode $resultCode")
         if (requestCode == Constants.REQUEST_LOGIN) {
             Tencent.onActivityResultData(requestCode, resultCode, data, this)
         }
+        mSsoHandler.authorizeCallBack(resultCode, resultCode, data)
         super.onActivityResult(requestCode, resultCode, data)
-        val ssoHandler = mSsoHandler
-        if (ssoHandler != null) {
-            ssoHandler.authorizeCallBack(resultCode, resultCode, data)
-        }
     }
 }

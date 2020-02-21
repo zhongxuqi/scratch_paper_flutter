@@ -17,8 +17,12 @@ Future<bool> isFreeExpired() async {
   var sharedPreference = await SharedPreferences.getInstance();
   var freeExpiredTs = sharedPreference.getInt(FreeExiredTimeKey);
   if (freeExpiredTs == null) {
-    freeExpiredTs = currTime;
-    sharedPreference.setInt(FreeExiredTimeKey, currTime);
+    freeExpiredTs = await platform_custom.getInstallTime();
+    freeExpiredTs = (freeExpiredTs ~/ 1000) + DaySeconds;
+    if (freeExpiredTs > currTime + DaySeconds) {
+      freeExpiredTs = currTime + DaySeconds;
+    }
+    sharedPreference.setInt(FreeExiredTimeKey, freeExpiredTs);
   }
   return freeExpiredTs < currTime;
 }
@@ -88,5 +92,9 @@ loginQQ() async {
 }
 
 loginWeibo() async {
-  platform_custom.loginWeibo();
+  var result = await platform_custom.loginWeibo();
+  Map<String, dynamic> qqUserInfo = json.decode(result);
+  await setUserType("weibo");
+  await setUserExpiredTime((qqUserInfo['expires_time'] as int) ~/ 1000);
+  await setUserID(qqUserInfo['uid']);
 }

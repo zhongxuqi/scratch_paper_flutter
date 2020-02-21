@@ -40,3 +40,13 @@ Future<String> loginWeibo() async {
   }
   return "";
 }
+
+Future<int> getInstallTime() async {
+  try {
+    var result = await platform.invokeMethod('getInstallTime', {});
+    return int.parse(result.toString());
+  } on PlatformException catch (e) {
+    print("error: ${e.message}.");
+  }
+  return 0;
+}
