@@ -304,7 +304,10 @@ void paintCanvas(BuildContext context, Canvas canvas, double scale, Point transl
         );
       }
     }
-    canvas.clipRect(Rect.fromPoints(Offset(leftTopBorder.x, leftTopBorder.y), Offset(rightTopBorder.x, rightTopBorder.y)));
+    if (leftTopBorder != null && rightTopBorder != null) {
+      canvas.clipRect(Rect.fromPoints(Offset(leftTopBorder.x, leftTopBorder.y),
+          Offset(rightTopBorder.x, rightTopBorder.y)));
+    }
     if (index == 0) {
       if (image != null) {
         canvas.drawImage(image, offset, paint);
