@@ -64,7 +64,6 @@ Future<String> getUserType() async {
     return '';
   }
   var ret = sharedPreference.getString(UserTypeKey);
-  print("getUserType $ret");
   return ret==null?'':ret;
 }
 
@@ -76,7 +75,6 @@ setUserExpiredTime(int t) async {
 Future<int> getUserExpiredTime() async {
   var sharedPreference = await SharedPreferences.getInstance();
   var ret = sharedPreference.getInt(UserExpiredTimeKey);
-  print("getUserExpiredTime $ret");
   return ret==null?0:ret;
 }
 
@@ -94,7 +92,6 @@ Future<String> getUserID() async {
     return '';
   }
   var ret = sharedPreference.getString(UserIDKey);
-  print("getUserID $ret");
   return ret==null?'':ret;
 }
 
