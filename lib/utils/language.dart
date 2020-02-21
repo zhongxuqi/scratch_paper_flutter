@@ -75,7 +75,7 @@ class AppLocalizations {
       'inputHint': '输入文本',
       'crop': '裁剪',
       'feedback': '反馈',
-      'inputTextHint': '请出入内容',
+      'inputTextHint': '请输入内容',
       'thankFeedback': '感谢您的反馈',
       'freeExpired': 'APP免费使用已到期',
       'exit': '退出APP',
