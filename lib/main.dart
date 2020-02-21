@@ -275,15 +275,15 @@ class _MainPageState extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
-    var avator = 'images/default_head.png';
+    var avatar = 'images/default_head.png';
     var nickname = AppLocalizations.of(context).getLanguageText('clickLogin');
     switch (loginType) {
       case "qq":
-        avator = 'images/QQ.png';
+        avatar = 'images/QQ.png';
         nickname = AppLocalizations.of(context).getLanguageText('logined');
         break;
       case "weibo":
-        avator = 'images/weibo.png';
+        avatar = 'images/weibo.png';
         nickname = AppLocalizations.of(context).getLanguageText('logined');
         break;
     }
@@ -564,7 +564,7 @@ class _MainPageState extends State<MainPage> {
                                     Container(
                                       margin: EdgeInsets.only(right: 10),
                                       child: Image.asset(
-                                        avator,
+                                        avatar,
                                         height: 30.0,
                                         width: 30.0,
                                       ),

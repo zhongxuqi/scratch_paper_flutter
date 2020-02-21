@@ -11,7 +11,7 @@ final UserTypeKey = 'user-type';
 final UserExpiredTimeKey = 'user-expired-time';
 final UserIDKey = 'user-id';
 final UserNameKey = 'user-name';
-final UserAvatorKey = 'user-avator';
+final UserAvatarKey = 'user-avatar';
 
 setAppVersion(int v) async {
   var sharedPreference = await SharedPreferences.getInstance();
