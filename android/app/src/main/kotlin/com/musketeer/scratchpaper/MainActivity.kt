@@ -70,11 +70,12 @@ class MainActivity: FlutterActivity(), RewardVideoADListener, IUiListener, WbAut
                 if (adLoaded) {
                     if (rewardVideoAD.hasShown()) {
                         rewardVideoAD.loadAD()
-                        adLoaded =false
+                        adLoaded = false
                         result.success("wait")
                     } else {
                         callbackResult = result
                         rewardVideoAD.showAD()
+                        adLoaded = false
                     }
                 } else {
                     result.success("wait")
@@ -144,7 +145,7 @@ class MainActivity: FlutterActivity(), RewardVideoADListener, IUiListener, WbAut
     }
 
     override fun onADShow() {
-
+        adLoaded = false
     }
 
     // QQ登录
