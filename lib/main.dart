@@ -128,6 +128,27 @@ class _MainPageState extends State<MainPage> {
     checkFreeExpied();
   }
 
+//  void checkPayBtn() async {
+//    var appChannel = await platform_custom.getAppChannel();
+//    print("appChannel $appChannel");
+//    var appVersion = await user.getAppVersion();
+//    mypass.getAppVersion().then((resp) {
+//      Map<String, dynamic> respObj = json.decode(utf8.decode(resp.bodyBytes));
+//      if (respObj['errno'] != 0) {
+//        return;
+//      }
+//      Map<String, int> respData = respObj['data'];
+//      var appVersion = respData['default'];
+//      if (respData.containsKey(appChannel)) {
+//        appVersion = respData['appChannel'];
+//      }
+//      print(appVersion);
+//      setState(() {
+//        showPayBtn = appVersion >= consts.AppVersion;
+//      });
+//    });
+//  }
+
   void checkFreeExpied() async {
     var userID = await user.getUserID();
     loginType = await user.getUserType();
@@ -222,6 +243,7 @@ class _MainPageState extends State<MainPage> {
                             setState(() {});
                             if (loginType != '') {
                               Navigator.of(context).pop();
+                              checkFreeExpied();
                             }
                           }
                       ),
@@ -229,15 +251,16 @@ class _MainPageState extends State<MainPage> {
                     Expanded(
                       flex:1,
                       child:GestureDetector(
-                          child: Image.asset('images/weibo.png', height: 50.0, width: 50.0,),
-                          onTap: () async {
-                            await user.loginWeibo();
-                            loginType = await user.getUserType();
-                            setState(() {});
-                            if (loginType != '') {
-                              Navigator.of(context).pop();
-                            }
+                        child: Image.asset('images/weibo.png', height: 50.0, width: 50.0,),
+                        onTap: () async {
+                          await user.loginWeibo();
+                          loginType = await user.getUserType();
+                          setState(() {});
+                          if (loginType != '') {
+                            Navigator.of(context).pop();
+                            checkFreeExpied();
                           }
+                        }
                       ),
                     ),
                   ],
@@ -865,6 +888,17 @@ class _MainPageState extends State<MainPage> {
                         );
                       },
                     );
+                  }
+                ),
+                RawMaterialButton(
+                  child: Text(
+                    AppLocalizations.of(context).getLanguageText('paidLogin'),
+                    style: TextStyle(
+                      color: Colors.blue,
+                    ),
+                  ),
+                  onPressed: () {
+                    showLogin();
                   }
                 ),
               ],

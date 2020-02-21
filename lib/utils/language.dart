@@ -50,6 +50,7 @@ class AppLocalizations {
       'sharePayToWechat': 'Share Pay Url to Wechat and Pay',
       'payUrl': 'ScratchPaper Wechat Pay URL',
       'thankForPay': 'Thank you for support ScratchPaper',
+      'paidLogin': 'Paid and Login',
     },
     'zh': {
       'edit': '编辑',
@@ -89,6 +90,7 @@ class AppLocalizations {
       'sharePayToWechat': '分享支付链接到微信并支付',
       'payUrl': '草稿本微信支付链接',
       'thankForPay': '感谢您对草稿本的支持',
+      'paidLogin': '已支付，登录',
     }
   };
 

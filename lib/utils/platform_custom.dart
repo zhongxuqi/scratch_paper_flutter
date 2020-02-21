@@ -50,3 +50,13 @@ Future<int> getInstallTime() async {
   }
   return 0;
 }
+
+Future<String> getAppChannel() async {
+  try {
+    var result = await platform.invokeMethod('getAppChannel', {});
+    return result.toString();
+  } on PlatformException catch (e) {
+    print("error: ${e.message}.");
+  }
+  return "";
+}

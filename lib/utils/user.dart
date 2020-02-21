@@ -4,6 +4,7 @@ import './platform_custom.dart' as platform_custom;
 import 'dart:convert';
 
 final FreeExiredTimeKey = "free-expired-time";
+final AppVersionKey = "app-version";
 final DaySeconds = 24 * 3600;
 
 final UserTypeKey = 'user-type';
@@ -11,6 +12,17 @@ final UserExpiredTimeKey = 'user-expired-time';
 final UserIDKey = 'user-id';
 final UserNameKey = 'user-name';
 final UserAvatorKey = 'user-avator';
+
+setAppVersion(int v) async {
+  var sharedPreference = await SharedPreferences.getInstance();
+  sharedPreference.setInt(AppVersionKey, v);
+}
+
+Future<int> getAppVersion() async {
+  var sharedPreference = await SharedPreferences.getInstance();
+  var ret = sharedPreference.getInt(AppVersionKey);
+  return ret==null?0:ret;
+}
 
 Future<bool> isFreeExpired() async {
   var currTime = DateTime.now().millisecondsSinceEpoch ~/ 1000;
@@ -52,6 +64,7 @@ Future<String> getUserType() async {
     return '';
   }
   var ret = sharedPreference.getString(UserTypeKey);
+  print("getUserType $ret");
   return ret==null?'':ret;
 }
 
@@ -63,6 +76,7 @@ setUserExpiredTime(int t) async {
 Future<int> getUserExpiredTime() async {
   var sharedPreference = await SharedPreferences.getInstance();
   var ret = sharedPreference.getInt(UserExpiredTimeKey);
+  print("getUserExpiredTime $ret");
   return ret==null?0:ret;
 }
 
@@ -80,6 +94,7 @@ Future<String> getUserID() async {
     return '';
   }
   var ret = sharedPreference.getString(UserIDKey);
+  print("getUserID $ret");
   return ret==null?'':ret;
 }
 

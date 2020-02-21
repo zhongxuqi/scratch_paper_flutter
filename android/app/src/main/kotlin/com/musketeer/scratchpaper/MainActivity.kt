@@ -27,6 +27,7 @@ import org.json.JSONObject
 
 class MainActivity: FlutterActivity(), RewardVideoADListener, IUiListener, WbAuthListener {
     private val CHANNEL = "com.musketeer.scratchpaper"
+    private val AppChannel = "main"
 
     val rewardVideoAD: RewardVideoAD by lazy {
         RewardVideoAD(this, "1103577955", "3071204170293278", this, true)
@@ -51,7 +52,7 @@ class MainActivity: FlutterActivity(), RewardVideoADListener, IUiListener, WbAut
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         GeneratedPluginRegistrant.registerWith(flutterEngine)
 
-        UMConfigure.init(this, "56ecff3ce0f55ac331000a80", "main", UMConfigure.DEVICE_TYPE_PHONE, null)
+        UMConfigure.init(this, "56ecff3ce0f55ac331000a80", AppChannel, UMConfigure.DEVICE_TYPE_PHONE, null)
         MobclickAgent.setPageCollectionMode(MobclickAgent.PageMode.MANUAL)
 
         WbSdk.install(this, mAuthInfo)
@@ -83,11 +84,13 @@ class MainActivity: FlutterActivity(), RewardVideoADListener, IUiListener, WbAut
                 callbackResult = result
             } else if (call.method == "loginWeibo") {
                 callbackResult = result
-                mSsoHandler.authorize(this)
+                mSsoHandler.authorizeWeb(this)
             } else if (call.method == "getInstallTime") {
                 val packageManager = applicationContext.packageManager
                 val packageInfo = packageManager.getPackageInfo(this.packageName, 0)
                 result.success(packageInfo.firstInstallTime.toString())
+            } else if (call.method == "getAppChannel") {
+                result.success(AppChannel)
             }
         }
     }
@@ -159,11 +162,11 @@ class MainActivity: FlutterActivity(), RewardVideoADListener, IUiListener, WbAut
 
     // 微博
     override fun onSuccess(p0: Oauth2AccessToken?) {
-        Log.d("===>>> onSuccess", p0.toString())
         if (p0 != null) {
             val jo = JSONObject()
             jo.put("uid", p0.uid)
             jo.put("expires_time", p0.expiresTime)
+            Log.d("===>>> onSuccess", jo.toString())
             callbackResult?.success(jo.toString())
         }
     }

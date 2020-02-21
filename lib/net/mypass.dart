@@ -24,3 +24,7 @@ Future<http.Response> postAccount(String platformType, String account) async {
     'account': account,
   })).timeout(Duration(seconds: 5));
 }
+
+Future<http.Response> getAppVersion() async {
+  return http.get(url + '/openapi/app_version').timeout(Duration(seconds: 2));
+}
