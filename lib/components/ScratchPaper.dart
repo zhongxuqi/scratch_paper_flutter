@@ -14,6 +14,7 @@ import 'Toast.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 
 const double PolygonDistanceMax = 20;
+const double baseScale = 0.5;
 
 enum ScratchMode {
   unknow,
@@ -248,14 +249,17 @@ void paintCanvas(BuildContext context, Canvas canvas, double scale, Point transl
     final width = 5 / scale;
     paint.strokeWidth = 1 / scale;
 
+    final screenWidth = MediaQuery.of(context).size.width / baseScale;
+    final screenHeight = MediaQuery.of(context).size.height / baseScale;
+
     // draw horizontal lines
-    for (var i = translate.y > 0 ?  - (translate.y.toInt() ~/ MediaQuery.of(context).size.height) : 1 + (-translate.y).toInt() ~/ MediaQuery.of(context).size.height; i * MediaQuery.of(context).size.height > -translate.y && i * MediaQuery.of(context).size.height < -translate.y + MediaQuery.of(context).size.height / scale; i++) {
-      drawDash(canvas, paint, Offset(-translate.x, i * MediaQuery.of(context).size.height), Offset(-translate.x + MediaQuery.of(context).size.width / scale, i * MediaQuery.of(context).size.height), width);
+    for (var i = translate.y > 0 ?  - (translate.y.toInt() ~/ screenHeight) : 1 + (-translate.y).toInt() ~/ screenHeight; i * screenHeight > -translate.y && i * screenHeight < -translate.y + screenHeight / scale; i++) {
+      drawDash(canvas, paint, Offset(-translate.x, i * screenHeight), Offset(-translate.x + screenWidth / scale, i * screenHeight), width);
     }
 
     // draw vertical lines
-    for (var i = translate.x > 0 ?  - (translate.x.toInt() ~/ MediaQuery.of(context).size.width) : 1 + (-translate.x).toInt() ~/ MediaQuery.of(context).size.width; i * MediaQuery.of(context).size.width > -translate.x && i * MediaQuery.of(context).size.width < -translate.x + MediaQuery.of(context).size.width / scale; i++) {
-      drawDash(canvas, paint, Offset(i * MediaQuery.of(context).size.width, -translate.y), Offset(i * MediaQuery.of(context).size.width, -translate.y + MediaQuery.of(context).size.height / scale), width);
+    for (var i = translate.x > 0 ?  - (translate.x.toInt() ~/ screenWidth) : 1 + (-translate.x).toInt() ~/ screenWidth; i * screenWidth > -translate.x && i * screenWidth < -translate.x + screenWidth / scale; i++) {
+      drawDash(canvas, paint, Offset(i * screenWidth, -translate.y), Offset(i * screenWidth, -translate.y + screenHeight / scale), width);
     }
   }
 
@@ -367,8 +371,8 @@ void paintCanvas(BuildContext context, Canvas canvas, double scale, Point transl
 
 class ScratchPaperState extends State<ScratchPaper> {
   final maxStrokesLen = 10;
-  final double minScale = 0.1;
-  final double maxScale = 2;
+  final double minScale = 0.1 * baseScale;
+  final double maxScale = 2 * baseScale;
   final LinkedList<Stroke> strokes = LinkedList<Stroke>();
   final LinkedList<Stroke> undoStrokes = LinkedList<Stroke>();
   bool isCheckingStrokes = false;
@@ -377,7 +381,7 @@ class ScratchPaperState extends State<ScratchPaper> {
   Point lastPoint;
   Stroke currStroke;
   Point translate = Point(x: 0, y: 0);
-  double scale = 1;
+  double scale = baseScale;
   double lastScale = 1;
   Offset _leftTopBorder, _rightBottomBorder;
   ScratchMode nextMode = ScratchMode.unknow;
@@ -387,7 +391,7 @@ class ScratchPaperState extends State<ScratchPaper> {
 
   void backOrigin() {
     setState(() {
-      scale = 1;
+      scale = baseScale;
       translate = Point(x: 0, y: 0);
     });
   }
@@ -437,19 +441,22 @@ class ScratchPaperState extends State<ScratchPaper> {
         currStroke = null;
         lastScale = 1;
 
-        if (img.width > MediaQuery.of(context).size.width || img.height > MediaQuery.of(context).size.height) {
-          var scaleH = MediaQuery.of(context).size.width / img.width;
-          var scaleV = MediaQuery.of(context).size.height / img.height;
+        final screenWidth = MediaQuery.of(context).size.width / baseScale;
+        final screenHeight = MediaQuery.of(context).size.height / baseScale;
+
+        if (img.width > screenWidth || img.height > screenHeight) {
+          var scaleH = screenWidth / img.width * baseScale;
+          var scaleV = screenHeight / img.height * baseScale;
           scale = scaleH < scaleV ? scaleH : scaleV;
           offset = Offset(
-            (MediaQuery.of(context).size.width / scale - img.width) / 2,
-            (MediaQuery.of(context).size.height / scale - img.height) / 2,
+            (screenWidth / scale * baseScale - img.width) / 2,
+            (screenHeight / scale * baseScale - img.height) / 2,
           );
         } else {
-          scale = 1;
+          scale = baseScale;
           offset = Offset(
-            (MediaQuery.of(context).size.width - img.width) / 2,
-            (MediaQuery.of(context).size.height - img.height) / 2,
+            (screenWidth - img.width) / 2,
+            (screenHeight - img.height) / 2,
           );
         }
       });
@@ -619,7 +626,7 @@ class ScratchPaperState extends State<ScratchPaper> {
       color: widget.selectedColor,
       lineWeight: widget.selectedLineWeight,
       text: text,
-      fontSize: fontSize,
+      fontSize: fontSize / baseScale,
     ));
   }
 
@@ -643,7 +650,7 @@ class ScratchPaperState extends State<ScratchPaper> {
                   y: -translate.y + details.localFocalPoint.dy / scale,
                 )),
                 color: Colors.white,
-                lineWeight: widget.selectedLineWeight,
+                lineWeight: widget.selectedLineWeight / baseScale,
               );
               break;
             case ScratchMode.edit:

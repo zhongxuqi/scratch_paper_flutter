@@ -56,13 +56,13 @@ setUserType(String t) async {
 }
 
 Future<String> getUserType() async {
-  var currTime = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+//  var currTime = DateTime.now().millisecondsSinceEpoch ~/ 1000;
   var sharedPreference = await SharedPreferences.getInstance();
-  var expiredTime = await getUserExpiredTime();
-  if (currTime > expiredTime) {
-    await clearUserInfo();
-    return '';
-  }
+//  var expiredTime = await getUserExpiredTime();
+//  if (currTime > expiredTime) {
+//    await clearUserInfo();
+//    return '';
+//  }
   var ret = sharedPreference.getString(UserTypeKey);
   return ret==null?'':ret;
 }
@@ -84,13 +84,13 @@ setUserID(String t) async {
 }
 
 Future<String> getUserID() async {
-  var currTime = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+//  var currTime = DateTime.now().millisecondsSinceEpoch ~/ 1000;
   var sharedPreference = await SharedPreferences.getInstance();
-  var expiredTime = await getUserExpiredTime();
-  if (currTime > expiredTime) {
-    await clearUserInfo();
-    return '';
-  }
+//  var expiredTime = await getUserExpiredTime();
+//  if (currTime > expiredTime) {
+//    await clearUserInfo();
+//    return '';
+//  }
   var ret = sharedPreference.getString(UserIDKey);
   return ret==null?'':ret;
 }

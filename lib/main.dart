@@ -105,11 +105,11 @@ class _MainPageState extends State<MainPage> {
   var scratchMode = ScratchMode.edit;
   var scratchGraphicsMode = ScratchGraphicsMode.line;
   Color selectedColor = black;
-  final lineWeights = <double>[1, 2, 4, 6, 8, 10];
-  double selectedLineWeight = 2;
+  final lineWeights = <double>[2, 4, 6, 8, 10, 12];
+  double selectedLineWeight = 4;
 
-  final eraserLineWeights = <double>[8, 12, 16, 20, 24, 28];
-  double eraserSelectedLineWeight = 16;
+  final eraserLineWeights = <double>[12, 16, 20, 24, 28, 32];
+  double eraserSelectedLineWeight = 20;
 
   Offset textInputerOffset;
   final textInpterMinWidth = 200;
