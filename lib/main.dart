@@ -773,133 +773,155 @@ class _MainPageState extends State<MainPage> {
           right: 0,
           child: Container(
             color: Colors.black38,
-            child: AlertDialog(
+            child: SimpleDialog(
               titlePadding: EdgeInsets.symmetric(vertical: 8, horizontal: 15),
-              contentPadding: EdgeInsets.all(0),
-              content: Container(
-                margin: EdgeInsets.all(10),
-                child: Text(
-                  AppLocalizations.of(context).getLanguageText('freeExpired'),
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Colors.green,
-                  ),
-                ),
-              ),
-              actions: <Widget>[
-                RawMaterialButton(
-                  child: Text(
-                    AppLocalizations.of(context).getLanguageText('exit'),
-                    style: TextStyle(
-                      color: Colors.grey,
+              contentPadding: EdgeInsets.fromLTRB(15.0, 0.0, 0.0, 0.0),
+              children: <Widget>[
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Expanded(
+                      flex: 1,
+                      child: Container(
+                        margin: EdgeInsets.symmetric(vertical: 10, horizontal: 0),
+                        child: Text(
+                          AppLocalizations.of(context).getLanguageText('freeExpired'),
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.green,
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                  onPressed: () {
-                    SystemNavigator.pop();
-                  },
-                ),
-                RawMaterialButton(
-                  child: Text(
-                    AppLocalizations.of(context).getLanguageText('showAds'),
-                    style: TextStyle(
-                      color: Colors.green,
+                    GestureDetector(
+                      child: Container(
+                        padding: EdgeInsets.all(3),
+                        child: Icon(
+                          IconFonts.close,
+                          color: Colors.grey,
+                          size: 24,
+                        ),
+                      ),
+                      onTap: () {
+                        SystemNavigator.pop();
+                      },
                     ),
-                  ),
-                  onPressed: () {
-                    showVideoAds();
-                  }
+                  ],
                 ),
-                RawMaterialButton(
-                  child: Text(
-                    AppLocalizations.of(context).getLanguageText('payAction'),
-                    style: TextStyle(
-                      color: Colors.orange,
+                Row(
+                  children: <Widget>[
+                    RawMaterialButton(
+                      child: Text(
+                        AppLocalizations.of(context).getLanguageText('showAds'),
+                        style: TextStyle(
+                          color: Colors.green,
+                        ),
+                      ),
+                      onPressed: () {
+                        showVideoAds();
+                      }
                     ),
-                  ),
-                  onPressed: () {
-                    if (loginType == '') {
-                      showLogin();
-                      return;
-                    }
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return SimpleDialog(
-                          children: <Widget>[
-                            Container(
-                              margin: EdgeInsets.only(bottom:10.0, left: 20.0, right: 20),
-                              child: Text(
-                                AppLocalizations.of(context).getLanguageText('payHint'),
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black,
-                                ),
-                              ),
-                            ),
-                            Row(
+                  ],
+                ),
+                Row(
+                  children: <Widget>[
+                    RawMaterialButton(
+                      child: Text(
+                        AppLocalizations.of(context).getLanguageText('payAction'),
+                        style: TextStyle(
+                          color: Colors.orange,
+                        ),
+                      ),
+                      onPressed: () {
+                        if (loginType == '') {
+                          showLogin();
+                          return;
+                        }
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return SimpleDialog(
                               children: <Widget>[
-                                Expanded(
-                                  flex: 1,
-                                  child: Container(
-                                    margin: EdgeInsets.symmetric(vertical:10.0, horizontal: 20.0),
-                                    child: GestureDetector(
-                                      child: Container(
-                                        padding: EdgeInsets.all(8.0),
-                                        decoration: BoxDecoration(
-                                          color: Colors.blue,
-                                          borderRadius: BorderRadius.all(Radius.circular(6.0)),
-                                        ),
-                                        child: Center(
-                                          child: Text(
-                                            AppLocalizations.of(context).getLanguageText('sharePayToWechat'),
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 15.0,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      onTap: () async {
-                                        var userID = await user.getUserID();
-                                        var payjsUrl = "${mypass.url}/payjs.html?app_id=${consts.AppID}&platform_type=$loginType&account=$userID";
-                                        var model = fluwx.WeChatShareWebPageModel(
-                                            webPage: payjsUrl,
-                                            title: AppLocalizations.of(context).getLanguageText('payUrl'),
-                                            description: AppLocalizations.of(context).getLanguageText('thankForPay'),
-                                            thumbnail: "assets://images/logo.png",
-                                            scene: fluwx.WeChatScene.SESSION,
-                                            transaction: "scratchpaper");
-                                        try {
-                                          await fluwx.shareToWeChat(model);
-                                        } on PlatformException catch(e) {
-                                          print("error: ${e.toString()}.");
-                                          showErrorToast(AppLocalizations.of(context).getLanguageText(
-                                              'wechat_not_found'));
-                                        }
-                                      },
+                                Container(
+                                  margin: EdgeInsets.only(bottom:10.0, left: 20.0, right: 20),
+                                  child: Text(
+                                    AppLocalizations.of(context).getLanguageText('payHint'),
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
                                     ),
                                   ),
                                 ),
+                                Row(
+                                  children: <Widget>[
+                                    Expanded(
+                                      flex: 1,
+                                      child: Container(
+                                        margin: EdgeInsets.symmetric(vertical:10.0, horizontal: 20.0),
+                                        child: GestureDetector(
+                                          child: Container(
+                                            padding: EdgeInsets.all(8.0),
+                                            decoration: BoxDecoration(
+                                              color: Colors.blue,
+                                              borderRadius: BorderRadius.all(Radius.circular(6.0)),
+                                            ),
+                                            child: Center(
+                                              child: Text(
+                                                AppLocalizations.of(context).getLanguageText('sharePayToWechat'),
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 15.0,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          onTap: () async {
+                                            var userID = await user.getUserID();
+                                            var payjsUrl = "${mypass.url}/payjs.html?app_id=${consts.AppID}&platform_type=$loginType&account=$userID";
+                                            var model = fluwx.WeChatShareWebPageModel(
+                                                webPage: payjsUrl,
+                                                title: AppLocalizations.of(context).getLanguageText('payUrl'),
+                                                description: AppLocalizations.of(context).getLanguageText('thankForPay'),
+                                                thumbnail: "assets://images/logo.png",
+                                                scene: fluwx.WeChatScene.SESSION,
+                                                transaction: "scratchpaper");
+                                            try {
+                                              await fluwx.shareToWeChat(model);
+                                            } on PlatformException catch(e) {
+                                              print("error: ${e.toString()}.");
+                                              showErrorToast(AppLocalizations.of(context).getLanguageText(
+                                                  'wechat_not_found'));
+                                            }
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ],
-                            ),
-                          ],
+                            );
+                          },
                         );
-                      },
-                    );
-                  }
-                ),
-                RawMaterialButton(
-                  child: Text(
-                    AppLocalizations.of(context).getLanguageText('paidLogin'),
-                    style: TextStyle(
-                      color: Colors.blue,
+                      }
                     ),
-                  ),
-                  onPressed: () {
-                    showLogin();
-                  }
+                  ],
+                ),
+                Row(
+                  children: <Widget>[
+                    RawMaterialButton(
+                      child: Text(
+                        AppLocalizations.of(context).getLanguageText('paidLogin'),
+                        style: TextStyle(
+                          color: Colors.blue,
+                        ),
+                      ),
+                      onPressed: () {
+                        showLogin();
+                      }
+                    ),
+                  ],
                 ),
               ],
             ),

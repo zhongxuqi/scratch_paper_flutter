@@ -29,4 +29,5 @@ class IconFonts {
   static const IconData ok = IconData(0xe6f5, fontFamily: 'iconfont');
   static const IconData crop = IconData(0xe6cf, fontFamily: 'iconfont');
   static const IconData feedback = IconData(0xe729, fontFamily: 'iconfont');
+  static const IconData close = IconData(0xe673, fontFamily: 'iconfont');
 }

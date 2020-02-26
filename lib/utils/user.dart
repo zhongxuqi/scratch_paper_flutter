@@ -5,7 +5,7 @@ import 'dart:convert';
 
 final FreeExiredTimeKey = "free-expired-time";
 final AppVersionKey = "app-version";
-final DaySeconds = 24 * 3600;
+final DaySeconds = 0; // 24 * 3600
 
 final UserTypeKey = 'user-type';
 final UserExpiredTimeKey = 'user-expired-time';
