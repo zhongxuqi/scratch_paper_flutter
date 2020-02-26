@@ -20,6 +20,7 @@ import 'dart:convert';
 import './utils/platform_custom.dart' as platform_custom;
 import './utils/user.dart' as user;
 import './common/consts.dart' as consts;
+import 'components/userNoticeDialog.dart';
 
 void main() => runApp(MyApp());
 
@@ -120,6 +121,8 @@ class _MainPageState extends State<MainPage> {
 
   var loginType = "";
 
+  var showUserNotice = false;
+
   @override
   void initState() {
     super.initState();
@@ -150,6 +153,18 @@ class _MainPageState extends State<MainPage> {
 //  }
 
   void checkFreeExpied() async {
+    var isFirstOpen = await user.getFirstOpenKey();
+    if (isFirstOpen == null) {
+
+      // 解决付费用户问题
+      var currTime = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+      var freeExpiredTime = await user.getFreeExpiredTime();
+      if (freeExpiredTime != null && freeExpiredTime > currTime + 2 * user.DaySeconds) {
+        user.setFirstOpenKey();
+      } else {
+        showUserNotice = true;
+      }
+    }
     var userID = await user.getUserID();
     loginType = await user.getUserType();
     setState(() {});
@@ -543,6 +558,7 @@ class _MainPageState extends State<MainPage> {
                               break;
                             case MoreAction.feedback:
                               showFeedbackDialog(context, callback: (msg) {
+                                if (msg == '') return;
                                 mypass.feedback(msg).then((resp) {
                                   Map<String, dynamic> respObj = json.decode(utf8.decode(resp.bodyBytes));
                                   if (respObj['errno'] != 0) {
@@ -766,7 +782,7 @@ class _MainPageState extends State<MainPage> {
             ),
           ),
         ),
-        freeExpired?Positioned(
+        freeExpired&&!showUserNotice?Positioned(
           top: 0,
           left: 0,
           bottom: 0,
@@ -919,6 +935,56 @@ class _MainPageState extends State<MainPage> {
                       ),
                       onPressed: () {
                         showLogin();
+                      }
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ):Container(),
+        showUserNotice&&AppLocalizations.of(context).isLangZh()?Positioned(
+          top: 0,
+          left: 0,
+          bottom: 0,
+          right: 0,
+          child: Container(
+            color: Colors.black38,
+            child: SimpleDialog(
+              titlePadding: EdgeInsets.symmetric(vertical: 8, horizontal: 15),
+              contentPadding: EdgeInsets.fromLTRB(15.0, 0.0, 0.0, 0.0),
+              children: <Widget>[
+                Row(
+                  children: <Widget>[
+                    RawMaterialButton(
+                      child: Text(
+                        AppLocalizations.of(context).getLanguageText('showUserNotice'),
+                        style: TextStyle(
+                          color: Colors.deepOrange,
+                          fontSize: 14,
+                        ),
+                      ),
+                      onPressed: () {
+                        showUserNoticeDialog(context);
+                      }
+                    ),
+                  ],
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: <Widget>[
+                    RawMaterialButton(
+                      child: Text(
+                        AppLocalizations.of(context).getLanguageText('agree'),
+                        style: TextStyle(
+                          color: Colors.blue,
+                        ),
+                      ),
+                      onPressed: () async {
+                        user.setFirstOpenKey();
+                        setState(() {
+                          showUserNotice = false;
+                        });
                       }
                     ),
                   ],

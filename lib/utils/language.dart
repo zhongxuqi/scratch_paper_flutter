@@ -51,6 +51,9 @@ class AppLocalizations {
       'payUrl': 'ScratchPaper Wechat Pay URL',
       'thankForPay': 'Thank you for support ScratchPaper',
       'paidLogin': 'I am paid user. Go login',
+      'showUserNotice': 'Click to show user notice',
+      'agree': 'Agree',
+      'readed': 'Readed',
     },
     'zh': {
       'edit': '编辑',
@@ -91,11 +94,18 @@ class AppLocalizations {
       'payUrl': '草稿本微信支付链接',
       'thankForPay': '感谢您对草稿本的支持',
       'paidLogin': '我是已付费用户，登录',
+      'showUserNotice': '点击查看隐私政策和用户协议',
+      'agree': '同意',
+      'readed': '已读',
     }
   };
 
   String getLanguageText(String textID) {
     return _languageTextMap[locale.languageCode][textID];
+  }
+
+  bool isLangZh() {
+    return locale.languageCode.contains('zh');
   }
 }
 
