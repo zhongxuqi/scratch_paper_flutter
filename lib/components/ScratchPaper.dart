@@ -666,11 +666,13 @@ class ScratchPaperState extends State<ScratchPaper> {
                   double radius = PolygonDistanceMax;
                   var selectedPoint = currPoint;
                   for (var stroke in strokes) {
-                    for (var point in stroke.points) {
-                      var theRadius = currPoint.distanceTo(point);
-                      if (radius > theRadius) {
-                        radius = theRadius;
-                        selectedPoint = point.clone(exists: true);
+                    if (stroke.scratchMode == ScratchMode.edit || stroke.scratchMode == ScratchMode.graphics) {
+                      for (var point in stroke.points) {
+                        var theRadius = currPoint.distanceTo(point);
+                        if (radius > theRadius) {
+                          radius = theRadius;
+                          selectedPoint = point.clone(exists: true);
+                        }
                       }
                     }
                   }
@@ -747,11 +749,13 @@ class ScratchPaperState extends State<ScratchPaper> {
                 double radius = PolygonDistanceMax;
                 var selectedPoint = currPoint;
                 for (var stroke in strokes) {
-                  for (var point in stroke.points) {
-                    var theRadius = currPoint.distanceTo(point);
-                    if (radius > theRadius) {
-                      radius = theRadius;
-                      selectedPoint = point.clone(exists: true);
+                  if (stroke.scratchMode == ScratchMode.edit || stroke.scratchMode == ScratchMode.graphics) {
+                    for (var point in stroke.points) {
+                      var theRadius = currPoint.distanceTo(point);
+                      if (radius > theRadius) {
+                        radius = theRadius;
+                        selectedPoint = point.clone(exists: true);
+                      }
                     }
                   }
                 }
