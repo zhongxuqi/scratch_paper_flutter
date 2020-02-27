@@ -702,7 +702,7 @@ class _MainPageState extends State<MainPage> {
                     ),
                     placeholder: AppLocalizations.of(context).getLanguageText('inputHint'),
                     style: TextStyle(
-                      fontSize: fontSize * _scratchPaperState.currentState.scale,
+                      fontSize: fontSize * _scratchPaperState.currentState.scale / baseScale,
                       color: selectedColor,
                       textBaseline: TextBaseline.alphabetic,
                     ),
