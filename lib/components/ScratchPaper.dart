@@ -13,8 +13,8 @@ import 'alertDialog.dart';
 import 'Toast.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 
-const double PolygonDistanceMax = 40;
 const double baseScale = 0.5;
+const double PolygonDistanceMax = 20 / baseScale;
 
 enum ScratchMode {
   unknow,
