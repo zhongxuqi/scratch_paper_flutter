@@ -13,7 +13,7 @@ import 'alertDialog.dart';
 import 'Toast.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 
-const double PolygonDistanceMax = 20;
+const double PolygonDistanceMax = 40;
 const double baseScale = 0.5;
 
 enum ScratchMode {
@@ -336,6 +336,7 @@ void paintCanvas(BuildContext context, Canvas canvas, double scale, Point transl
 
   if (currStroke != null) {
     if (currStroke.scratchMode == ScratchMode.crop && currStroke.points.length == 2) {
+      paint.strokeWidth = 2 / baseScale;
       final width = 5 / scale;
       paint.color = scratchMode2Color(ScratchMode.crop);
       drawDash(canvas, paint, Offset(currStroke.points.first.x, currStroke.points.first.y), Offset(currStroke.points.first.x, currStroke.points.last.y), width);
@@ -353,7 +354,7 @@ void paintCanvas(BuildContext context, Canvas canvas, double scale, Point transl
       for (var point in currStroke.points) {
         if (point.exists) {
           paint.color = Colors.grey;
-          paint.strokeWidth = 2;
+          paint.strokeWidth = 2 / baseScale;
           canvas.drawCircle(Offset(point.x, point.y), PolygonDistanceMax, paint);
         }
       }
