@@ -157,13 +157,13 @@ class _MainPageState extends State<MainPage> {
     if (isFirstOpen == null) {
 
       // 解决付费用户问题
-      var currTime = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-      var freeExpiredTime = await user.getFreeExpiredTime();
-      if (freeExpiredTime != null && freeExpiredTime > currTime + 2 * user.DaySeconds) {
+//      var currTime = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+//      var freeExpiredTime = await user.getFreeExpiredTime();
+//      if (freeExpiredTime != null && freeExpiredTime > currTime + 2 * user.DaySeconds) {
         user.setFirstOpenKey();
-      } else {
-        showUserNotice = true;
-      }
+//      } else {
+//        showUserNotice = true;
+//      }
     }
     var userID = await user.getUserID();
     loginType = await user.getUserType();

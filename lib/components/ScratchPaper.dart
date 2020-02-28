@@ -372,7 +372,7 @@ void paintCanvas(BuildContext context, Canvas canvas, double scale, Point transl
 
 class ScratchPaperState extends State<ScratchPaper> {
   final maxStrokesLen = 10;
-  final double minScale = 0.1 * baseScale;
+  final double minScale = 0.3 * baseScale;
   final double maxScale = 2 * baseScale;
   final LinkedList<Stroke> strokes = LinkedList<Stroke>();
   final LinkedList<Stroke> undoStrokes = LinkedList<Stroke>();
