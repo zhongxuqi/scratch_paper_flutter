@@ -707,6 +707,7 @@ class ScratchPaperState extends State<ScratchPaper> {
         onScaleUpdate: (details) {
           if (widget.scratchMode != ScratchMode.move && details.scale != 1) {
             nextMode = widget.scratchMode;
+            currStroke.scratchMode = ScratchMode.move;
             modeChanged(ScratchMode.move);
             return;
           }
@@ -832,7 +833,7 @@ class Point extends LinkedListEntry<Point> {
 }
 
 class Stroke extends LinkedListEntry<Stroke> {
-  final ScratchMode scratchMode;
+  ScratchMode scratchMode;
   final ScratchGraphicsMode scratchGraphicsMode;
   final LinkedList<Point> points;
   final Color color;
