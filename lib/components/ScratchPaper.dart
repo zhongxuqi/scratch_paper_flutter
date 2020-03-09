@@ -209,7 +209,7 @@ void drawStroke(Canvas canvas, Paint paint, Stroke stroke) {
       var path = Path()
         ..fillType = PathFillType.evenOdd;
       path.moveTo(stroke.points.elementAt(0).x, stroke.points.elementAt(0).y);
-      if (stroke.scratchMode == ScratchMode.edit && stroke.points.length == 1) {
+      if (stroke.scratchMode != ScratchMode.move && stroke.points.length == 1) {
         path.lineTo(stroke.points.elementAt(0).x, stroke.points.elementAt(0).y);
       }
       for (var i=1;i<stroke.points.length;i++) {
