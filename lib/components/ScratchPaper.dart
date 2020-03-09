@@ -209,6 +209,9 @@ void drawStroke(Canvas canvas, Paint paint, Stroke stroke) {
       var path = Path()
         ..fillType = PathFillType.evenOdd;
       path.moveTo(stroke.points.elementAt(0).x, stroke.points.elementAt(0).y);
+      if (stroke.scratchMode == ScratchMode.edit && stroke.points.length == 1) {
+        path.lineTo(stroke.points.elementAt(0).x, stroke.points.elementAt(0).y);
+      }
       for (var i=1;i<stroke.points.length;i++) {
         path.lineTo(stroke.points.elementAt(i).x, stroke.points.elementAt(i).y);
       }
@@ -707,6 +710,7 @@ class ScratchPaperState extends State<ScratchPaper> {
         onScaleUpdate: (details) {
           if (widget.scratchMode != ScratchMode.move && details.scale != 1) {
             nextMode = widget.scratchMode;
+            currStroke.scratchMode = ScratchMode.move;
             modeChanged(ScratchMode.move);
             return;
           }
@@ -832,7 +836,7 @@ class Point extends LinkedListEntry<Point> {
 }
 
 class Stroke extends LinkedListEntry<Stroke> {
-  final ScratchMode scratchMode;
+  ScratchMode scratchMode;
   final ScratchGraphicsMode scratchGraphicsMode;
   final LinkedList<Point> points;
   final Color color;
