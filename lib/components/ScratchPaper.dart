@@ -199,8 +199,7 @@ void drawStroke(Canvas canvas, Paint paint, Stroke stroke) {
           textDirection: TextDirection.rtl,
         );
         textPainter.layout(minWidth: 0, maxWidth: 9999);
-        textPainter.paint(
-            canvas, Offset(stroke.points.first.x, stroke.points.first.y));
+        textPainter.paint(canvas, Offset(stroke.points.first.x, stroke.points.first.y));
       }
       break;
     case ScratchMode.crop:
