@@ -30,4 +30,6 @@ class IconFonts {
   static const IconData crop = IconData(0xe6cf, fontFamily: 'iconfont');
   static const IconData feedback = IconData(0xe729, fontFamily: 'iconfont');
   static const IconData close = IconData(0xe673, fontFamily: 'iconfont');
+  static const IconData image = IconData(0xe730, fontFamily: 'iconfont');
+  static const IconData camera = IconData(0xe629, fontFamily: 'iconfont');
 }

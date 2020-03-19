@@ -61,6 +61,10 @@ class AppLocalizations {
       'wechatFriend': 'Wechat Friend',
       'wechatTimeline': 'Wechat Timeline',
       'shareTo': 'Share to',
+      'pickFrom': 'Pick From',
+      'gallery': 'Gallery',
+      'camera': 'Camera',
+      'importImageEdit': 'Import Image Edit',
     },
     'zh': {
       'edit': '编辑',
@@ -111,6 +115,10 @@ class AppLocalizations {
       'wechatFriend': '微信好友',
       'wechatTimeline': '微信朋友圈',
       'shareTo': '分享到',
+      'pickFrom': '导入自',
+      'gallery': '相册',
+      'camera': '相机',
+      'importImageEdit': '导入图片编辑',
     }
   };
 

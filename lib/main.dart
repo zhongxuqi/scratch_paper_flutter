@@ -11,7 +11,6 @@ import 'components/LineWeightPicker.dart';
 import 'components/Toast.dart';
 import 'package:flutter_share/flutter_share.dart';
 import 'package:fluwx/fluwx.dart' as fluwx;
-import 'package:multi_image_picker/multi_image_picker.dart';
 import 'dart:ui' as ui;
 import 'package:permission_handler/permission_handler.dart';
 import 'components/alertDialog.dart';
@@ -22,6 +21,7 @@ import './utils/user.dart' as user;
 import './common/consts.dart' as consts;
 import 'components/userNoticeDialog.dart';
 import 'components/shareWechatDialog.dart';
+import 'components/imagePickDialog.dart';
 
 void main() => runApp(MyApp());
 
@@ -546,21 +546,17 @@ class _MainPageState extends State<MainPage> {
                               if (permissions[PermissionGroup.storage] != PermissionStatus.granted || permissions[PermissionGroup.camera] != PermissionStatus.granted) {
                                 return;
                               }
-                              List<Asset> resultList = List<Asset>();
-                              try {
-                                resultList = await MultiImagePicker.pickImages(
-                                  maxImages: 1,
-                                  enableCamera: true,
-                                );
-                              } on Exception catch (e) {
-                                print(e.toString());
-                                return;
-                              }
-                              if (!mounted) return;
-                              if (resultList.length <= 0) return;
-                              ui.decodeImageFromList((await resultList[0].getByteData()).buffer.asUint8List(), (image) {
-                                _scratchPaperState.currentState.image = image;
-                              });
+                              showModalBottomSheet(
+                                context: context,
+                                builder: (ctx) => ImagePickDialog(
+                                  callback: (image) async {
+                                    ui.decodeImageFromList(await image.readAsBytes(), (image) {
+                                      _scratchPaperState.currentState.image = image;
+                                    });
+                                  },
+                                  title: AppLocalizations.of(context).getLanguageText('importImageEdit'),
+                                ),
+                              );
                               break;
                             case MoreAction.gallery:
                               _scratchPaperState.currentState.saveGallery();
