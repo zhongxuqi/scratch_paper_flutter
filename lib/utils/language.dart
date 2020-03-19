@@ -54,6 +54,13 @@ class AppLocalizations {
       'showUserNotice': 'Click to show user notice',
       'agree': 'Agree',
       'readed': 'Readed',
+      'inviteFriend': 'Invite Wechat Friend',
+      'shareTitle': 'Scratch Paper',
+      'shareDescription': 'Scratch paper new choose. Protect our environment',
+      'wechatNotFound': 'Wechat not found',
+      'wechatFriend': 'Wechat Friend',
+      'wechatTimeline': 'Wechat Timeline',
+      'shareTo': 'Share to',
     },
     'zh': {
       'edit': '编辑',
@@ -97,6 +104,13 @@ class AppLocalizations {
       'showUserNotice': '点击查看隐私政策和用户协议',
       'agree': '同意',
       'readed': '已读',
+      'inviteFriend': '邀请微信好友',
+      'shareTitle': '草稿本',
+      'shareDescription': '草稿本新选择，保护我们的环境',
+      'wechatNotFound': '找不到微信',
+      'wechatFriend': '微信好友',
+      'wechatTimeline': '微信朋友圈',
+      'shareTo': '分享到',
     }
   };
 

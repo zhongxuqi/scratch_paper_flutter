@@ -21,6 +21,7 @@ import './utils/platform_custom.dart' as platform_custom;
 import './utils/user.dart' as user;
 import './common/consts.dart' as consts;
 import 'components/userNoticeDialog.dart';
+import 'components/shareWechatDialog.dart';
 
 void main() => runApp(MyApp());
 
@@ -123,12 +124,29 @@ class _MainPageState extends State<MainPage> {
 
   var showUserNotice = false;
 
+  bool shareWechat = false;
+  int shareWechatDays = 0;
+  String shareWechatUrl = "";
+
   @override
   void initState() {
     super.initState();
     fluwx.registerWxApi(
         appId: "wx27f355795896793b", doOnAndroid: true, doOnIOS: true);
     checkFreeExpied();
+
+    mypass.scratchPaper().then((resp) {
+      Map<String, dynamic> respObj = json.decode(utf8.decode(resp.bodyBytes));
+      if (respObj['errno'] != 0) {
+        return;
+      }
+      Map<String, dynamic> respData = respObj['data'];
+      Map<String, dynamic> respDataShareWechat = respData['share_wechat'];
+      shareWechat = respDataShareWechat['status'];
+      shareWechatDays = respDataShareWechat['days'];
+      shareWechatUrl = respDataShareWechat['url'];
+      setState(() {});
+    });
   }
 
 //  void checkPayBtn() async {
@@ -556,6 +574,14 @@ class _MainPageState extends State<MainPage> {
                                 ));
                               }
                               break;
+                            case MoreAction.invitWechat:
+                              showModalBottomSheet(
+                                context: context,
+                                builder: (context) => ShareWechatDialog(
+                                  webPageUrl: shareWechatUrl,
+                                ),
+                              );
+                              break;
                             case MoreAction.feedback:
                               showFeedbackDialog(context, callback: (msg) {
                                 if (msg == '') return;
@@ -571,7 +597,12 @@ class _MainPageState extends State<MainPage> {
                           }
                         },
                         itemBuilder: (BuildContext context) {
-                          return <MoreAction>[MoreAction.user, MoreAction.backOrigin, MoreAction.clear, MoreAction.import, MoreAction.export, MoreAction.gallery, MoreAction.wechat, MoreAction.feedback].map((item) {
+                          var actions = <MoreAction>[MoreAction.user, MoreAction.backOrigin, MoreAction.clear, MoreAction.import, MoreAction.export, MoreAction.gallery, MoreAction.wechat];
+                          if (shareWechat) {
+                            actions.add(MoreAction.invitWechat);
+                          }
+                          actions.add(MoreAction.feedback);
+                          return actions.map((item) {
                             if (item == MoreAction.user) {
                               return PopupMenuItem<MoreAction>(
                                 value: item,
@@ -1029,6 +1060,7 @@ enum MoreAction {
   export,
   gallery,
   wechat,
+  invitWechat,
   feedback,
 }
 
@@ -1045,6 +1077,8 @@ IconData MoreAction2Icon(MoreAction action) {
     case MoreAction.gallery:
       return IconFonts.gallery;
     case MoreAction.wechat:
+      return IconFonts.wechat;
+    case MoreAction.invitWechat:
       return IconFonts.wechat;
     case MoreAction.feedback:
       return IconFonts.feedback;
@@ -1067,6 +1101,8 @@ String MoreAction2Desc(BuildContext context, MoreAction action) {
       return AppLocalizations.of(context).getLanguageText('save2Gallery');
     case MoreAction.wechat:
       return AppLocalizations.of(context).getLanguageText('shareWechat');
+    case MoreAction.invitWechat:
+      return AppLocalizations.of(context).getLanguageText('inviteFriend');
     case MoreAction.feedback:
       return AppLocalizations.of(context).getLanguageText('feedback');
     default:

@@ -4,6 +4,7 @@ import 'dart:convert';
 import '../common/consts.dart' as consts;
 
 var url = "https://www.easypass.tech";
+//var url = "http://192.168.0.103:8000";
 
 Future<http.Response> feedback(String message) async {
   return http.post(url + '/openapi/codeutils', headers: {
@@ -27,4 +28,8 @@ Future<http.Response> postAccount(String platformType, String account) async {
 
 Future<http.Response> getAppVersion() async {
   return http.get(url + '/openapi/app_version').timeout(Duration(seconds: 2));
+}
+
+Future<http.Response> scratchPaper() async {
+  return http.get(url + '/openapi/scratch_paper').timeout(Duration(seconds: 2));
 }
