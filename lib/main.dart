@@ -127,6 +127,7 @@ class _MainPageState extends State<MainPage> {
   bool shareWechat = false;
   int shareWechatDays = 0;
   String shareWechatUrl = "";
+  bool isVip = false;
 
   @override
   void initState() {
@@ -197,6 +198,9 @@ class _MainPageState extends State<MainPage> {
         if (respObj['data']['expire_time'] > currTime) {
           await user.addFreeExpired(7);
           freeExpired = await user.isFreeExpired();
+          isVip = true;
+        } else {
+          isVip = false;
         }
       }).whenComplete(() {
         setState(() {});
@@ -619,6 +623,21 @@ class _MainPageState extends State<MainPage> {
                                         fontSize: 15,
                                       ),
                                     ),
+                                    isVip?Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.orange,
+                                        borderRadius: BorderRadius.all(Radius.circular(4)),
+                                      ),
+                                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      margin: EdgeInsets.only(left: 8),
+                                      child: Text(
+                                        "VIP",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 15,
+                                        ),
+                                      ),
+                                    ):Container(),
                                   ],
                                 ),
                               );
