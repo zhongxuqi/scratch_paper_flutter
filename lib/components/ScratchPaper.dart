@@ -12,6 +12,7 @@ import 'package:path/path.dart' as path;
 import 'alertDialog.dart';
 import 'Toast.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
+import 'loadingDialog.dart';
 
 const double baseScale = 0.5;
 const double PolygonDistanceMax = 20 / baseScale;
@@ -579,12 +580,14 @@ class ScratchPaperState extends State<ScratchPaper> {
     if (permissions[PermissionGroup.storage] != PermissionStatus.granted) {
       return "";
     }
+    showLoadingDialog(context, AppLocalizations.of(context).getLanguageText('exporting'));
     final img = await drawImage();
     final pngBytes = await img.toByteData(format: ui.ImageByteFormat.png);
     final externalDir = await getExternalStorageDirectory();
     final imageFilePath = path.join(externalDir.absolute.path, "scratch_paper_export.png");
     final imageFile = File(imageFilePath);
     await imageFile.writeAsBytes(pngBytes.buffer.asInt8List(), mode: FileMode.writeOnly, flush: true);
+    Navigator.of(context).pop();
     return imageFilePath;
   }
 
@@ -597,9 +600,11 @@ class ScratchPaperState extends State<ScratchPaper> {
     if (permissions[PermissionGroup.storage] != PermissionStatus.granted) {
       return;
     }
+    showLoadingDialog(context, AppLocalizations.of(context).getLanguageText('exporting'));
     var img = await drawImage();
     final pngBytes = await img.toByteData(format: ui.ImageByteFormat.png);
     await ImageGallerySaver.saveImage(pngBytes.buffer.asUint8List());
+    Navigator.of(context).pop();
     showSuccessToast(AppLocalizations.of(context).getLanguageText('saveSuccess'));
   }
 
