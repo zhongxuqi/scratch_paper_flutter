@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:fluwx/fluwx.dart' as fluwx;
 import '../utils/language.dart';
-import 'package:flutter/services.dart';
-import 'Toast.dart';
 
 class ShareWechatDialog extends StatelessWidget {
-  final String webPageUrl;
+  final ValueChanged<fluwx.WeChatScene> callback;
 
-  ShareWechatDialog({Key key, @required this.webPageUrl}): super(key: key);
+  ShareWechatDialog({Key key, @required this.callback}): super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -48,29 +46,29 @@ class ShareWechatDialog extends StatelessWidget {
                         ],
                       ),
                       onTap: () {
-                        _share(context, fluwx.WeChatScene.SESSION);
+                        callback(fluwx.WeChatScene.SESSION);
                       }
                   ),
                 ),
                 Expanded(
                   flex:1,
                   child:GestureDetector(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: <Widget>[
-                          Image.asset('images/wechat-friend.png', height: 50.0, width: 50.0,),
-                          Padding(
-                            child: Text(
-                              AppLocalizations.of(context).getLanguageText('wechatTimeline'),
-                              style: TextStyle(fontSize:12),
-                            ),
-                            padding: EdgeInsets.all(8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: <Widget>[
+                        Image.asset('images/wechat-friend.png', height: 50.0, width: 50.0,),
+                        Padding(
+                          child: Text(
+                            AppLocalizations.of(context).getLanguageText('wechatTimeline'),
+                            style: TextStyle(fontSize:12),
                           ),
-                        ],
-                      ),
-                      onTap: () {
-                        _share(context, fluwx.WeChatScene.TIMELINE);
-                      }
+                          padding: EdgeInsets.all(8),
+                        ),
+                      ],
+                    ),
+                    onTap: () {
+                      callback(fluwx.WeChatScene.TIMELINE);
+                    }
                   ),
                 )
               ],
@@ -79,22 +77,5 @@ class ShareWechatDialog extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  _share(BuildContext context, fluwx.WeChatScene scene) async {
-    var model = fluwx.WeChatShareWebPageModel(
-        webPage: webPageUrl,
-        title: AppLocalizations.of(context).getLanguageText('shareTitle'),
-        description: AppLocalizations.of(context).getLanguageText('shareDescription'),
-        thumbnail: "assets://images/logo.png",
-        scene: scene,
-        transaction: "ScratchPaper");
-    try {
-      await fluwx.shareToWeChat(model);
-    } on PlatformException catch (e) {
-      print("error: ${e.toString()}.");
-      showErrorToast(AppLocalizations.of(context).getLanguageText('wechatNotFound'));
-    }
-    return;
   }
 }

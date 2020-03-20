@@ -568,17 +568,46 @@ class _MainPageState extends State<MainPage> {
                             case MoreAction.wechat:
                               var imageFilePath = await _scratchPaperState.currentState.export();
                               if (imageFilePath != "") {
-                                fluwx.shareToWeChat(fluwx.WeChatShareImageModel(
-                                  image: "file://$imageFilePath",
-                                  scene: fluwx.WeChatScene.SESSION,
-                                ));
+                                showModalBottomSheet(
+                                  context: context,
+                                  builder: (context) => ShareWechatDialog(
+                                    callback: (fluwx.WeChatScene scene) async {
+                                      Navigator.of(context).pop();
+                                      try {
+                                        await fluwx.shareToWeChat(fluwx.WeChatShareImageModel(
+                                          image: "file://$imageFilePath",
+                                          scene: scene,
+                                        ));
+                                      } on PlatformException catch(e) {
+                                        print("error: ${e.toString()}.");
+                                        showErrorToast(AppLocalizations.of(context).getLanguageText(
+                                            'wechatNotFound'));
+                                      }
+                                    },
+                                  ),
+                                );
                               }
                               break;
                             case MoreAction.invitWechat:
                               showModalBottomSheet(
                                 context: context,
                                 builder: (context) => ShareWechatDialog(
-                                  webPageUrl: shareWechatUrl,
+                                  callback: (fluwx.WeChatScene scene) async {
+                                    Navigator.of(context).pop();
+                                    var model = fluwx.WeChatShareWebPageModel(
+                                        webPage: shareWechatUrl,
+                                        title: AppLocalizations.of(context).getLanguageText('shareTitle'),
+                                        description: AppLocalizations.of(context).getLanguageText('shareDescription'),
+                                        thumbnail: "assets://images/logo.png",
+                                        scene: scene,
+                                        transaction: "ScratchPaper");
+                                    try {
+                                      await fluwx.shareToWeChat(model);
+                                    } on PlatformException catch (e) {
+                                      print("error: ${e.toString()}.");
+                                      showErrorToast(AppLocalizations.of(context).getLanguageText('wechatNotFound'));
+                                    }
+                                  },
                                 ),
                               );
                               break;
@@ -954,7 +983,7 @@ class _MainPageState extends State<MainPage> {
                                             } on PlatformException catch(e) {
                                               print("error: ${e.toString()}.");
                                               showErrorToast(AppLocalizations.of(context).getLanguageText(
-                                                  'wechat_not_found'));
+                                                  'wechatNotFound'));
                                             }
                                           },
                                         ),
