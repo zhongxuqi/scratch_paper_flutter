@@ -578,7 +578,7 @@ class _MainPageState extends State<MainPage> {
                                           image: "file://$imageFilePath",
                                           scene: scene,
                                         ));
-                                      } on PlatformException catch(e) {
+                                      } on Exception catch(e) {
                                         print("error: ${e.toString()}.");
                                         showErrorToast(AppLocalizations.of(context).getLanguageText(
                                             'wechatNotFound'));
@@ -603,7 +603,7 @@ class _MainPageState extends State<MainPage> {
                                         transaction: "ScratchPaper");
                                     try {
                                       await fluwx.shareToWeChat(model);
-                                    } on PlatformException catch (e) {
+                                    } on Exception catch (e) {
                                       print("error: ${e.toString()}.");
                                       showErrorToast(AppLocalizations.of(context).getLanguageText('wechatNotFound'));
                                     }
