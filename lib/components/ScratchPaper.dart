@@ -7,12 +7,12 @@ import 'package:flutter/rendering.dart';
 import 'package:scratch_paper_flutter/utils/iconfonts.dart';
 import '../utils/language.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:path/path.dart' as path;
 import 'alertDialog.dart';
 import 'Toast.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'loadingDialog.dart';
+import '../utils/common.dart';
 
 const double baseScale = 0.5;
 const double PolygonDistanceMax = 20 / baseScale;
@@ -571,19 +571,26 @@ class ScratchPaperState extends State<ScratchPaper> {
     return await picture.toImage(rightBottomPoint.dx.toInt(), rightBottomPoint.dy.toInt());
   }
 
+  Future<Directory> getDirectory() async {
+    if (Platform.isIOS) {
+      return getApplicationDocumentsDirectory();
+    } else {
+      return getExternalStorageDirectory();
+    }
+  }
+
   Future<String> export() async {
     if (_image == null && strokes.length <= 0) {
       showErrorToast(AppLocalizations.of(context).getLanguageText('cantShareEmpty'));
       return "";
     }
-    Map<PermissionGroup, PermissionStatus> permissions = await PermissionHandler().requestPermissions([PermissionGroup.storage]);
-    if (permissions[PermissionGroup.storage] != PermissionStatus.granted) {
+    if (! await checkPermission()) {
       return "";
     }
     showLoadingDialog(context, AppLocalizations.of(context).getLanguageText('exporting'));
     final img = await drawImage();
     final pngBytes = await img.toByteData(format: ui.ImageByteFormat.png);
-    final externalDir = await getExternalStorageDirectory();
+    var externalDir = await getDirectory();
     final imageFilePath = path.join(externalDir.absolute.path, "scratch_paper_export.png");
     final imageFile = File(imageFilePath);
     await imageFile.writeAsBytes(pngBytes.buffer.asInt8List(), mode: FileMode.writeOnly, flush: true);
@@ -596,8 +603,7 @@ class ScratchPaperState extends State<ScratchPaper> {
       showErrorToast(AppLocalizations.of(context).getLanguageText('contentEmpty'));
       return;
     }
-    Map<PermissionGroup, PermissionStatus> permissions = await PermissionHandler().requestPermissions([PermissionGroup.storage]);
-    if (permissions[PermissionGroup.storage] != PermissionStatus.granted) {
+    if (! await checkPermission()) {
       return;
     }
     showLoadingDialog(context, AppLocalizations.of(context).getLanguageText('exporting'));

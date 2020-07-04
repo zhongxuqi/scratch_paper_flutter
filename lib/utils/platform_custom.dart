@@ -1,4 +1,5 @@
 import 'package:flutter/services.dart';
+import 'dart:io';
 
 const platform = const MethodChannel('com.musketeer.scratchpaper');
 
@@ -42,6 +43,9 @@ Future<String> loginWeibo() async {
 }
 
 Future<int> getInstallTime() async {
+  if (Platform.isIOS) {
+    return DateTime.now().millisecondsSinceEpoch ~/ 1000;
+  }
   try {
     var result = await platform.invokeMethod('getInstallTime', {});
     return int.parse(result.toString());

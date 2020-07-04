@@ -12,7 +12,6 @@ import 'components/Toast.dart';
 import 'package:flutter_share/flutter_share.dart';
 import 'package:fluwx/fluwx.dart' as fluwx;
 import 'dart:ui' as ui;
-import 'package:permission_handler/permission_handler.dart';
 import 'components/alertDialog.dart';
 import './net/mypass.dart' as mypass;
 import 'dart:convert';
@@ -22,6 +21,8 @@ import './common/consts.dart' as consts;
 import 'components/userNoticeDialog.dart';
 import 'components/shareWechatDialog.dart';
 import 'components/imagePickDialog.dart';
+import './utils/common.dart';
+import 'dart:io';
 
 void main() => runApp(MyApp());
 
@@ -172,6 +173,9 @@ class _MainPageState extends State<MainPage> {
 //  }
 
   void checkFreeExpied() async {
+    if (Platform.isIOS) {
+      return;
+    }
     var isFirstOpen = await user.getFirstOpenKey();
     if (isFirstOpen == null) {
 
@@ -546,8 +550,7 @@ class _MainPageState extends State<MainPage> {
                               _scratchPaperState.currentState.reset();
                               break;
                             case MoreAction.import:
-                              Map<PermissionGroup, PermissionStatus> permissions = await PermissionHandler().requestPermissions([PermissionGroup.storage, PermissionGroup.camera]);
-                              if (permissions[PermissionGroup.storage] != PermissionStatus.granted || permissions[PermissionGroup.camera] != PermissionStatus.granted) {
+                              if (! await checkPermission()) {
                                 return;
                               }
                               showModalBottomSheet(
@@ -626,7 +629,15 @@ class _MainPageState extends State<MainPage> {
                           }
                         },
                         itemBuilder: (BuildContext context) {
-                          var actions = <MoreAction>[MoreAction.user, MoreAction.backOrigin, MoreAction.clear, MoreAction.import, MoreAction.export, MoreAction.gallery, MoreAction.wechat];
+                          var actions = [];
+                          if (Platform.isAndroid) {
+                            actions.add(MoreAction.user);
+                          }
+                          actions.addAll(<MoreAction>[MoreAction.backOrigin, MoreAction.clear, MoreAction.import, MoreAction.export]);
+                          if (Platform.isAndroid) {
+                            actions.add(MoreAction.gallery);
+                            actions.add(MoreAction.wechat);
+                          }
                           if (shareWechat) {
                             actions.add(MoreAction.invitWechat);
                           }
