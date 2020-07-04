@@ -133,6 +133,7 @@ class _MainPageState extends State<MainPage> {
   @override
   void initState() {
     super.initState();
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.dark);
     fluwx.registerWxApi(
         appId: "wx27f355795896793b", doOnAndroid: true, doOnIOS: true);
     checkFreeExpied();
