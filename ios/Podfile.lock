@@ -28,6 +28,8 @@ PODS:
   - shared_preferences_web (0.0.1):
     - Flutter
   - TOCropViewController (2.5.3)
+  - UMCCommon (7.1.0)
+  - UMCCommonLog (2.0.0)
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
@@ -44,10 +46,14 @@ DEPENDENCIES:
   - shared_preferences (from `.symlinks/plugins/shared_preferences/ios`)
   - shared_preferences_macos (from `.symlinks/plugins/shared_preferences_macos/ios`)
   - shared_preferences_web (from `.symlinks/plugins/shared_preferences_web/ios`)
+  - UMCCommon
+  - UMCCommonLog
 
 SPEC REPOS:
   trunk:
     - TOCropViewController
+    - UMCCommon
+    - UMCCommonLog
 
 EXTERNAL SOURCES:
   Flutter:
@@ -95,7 +101,9 @@ SPEC CHECKSUMS:
   shared_preferences_macos: f3f29b71ccbb56bf40c9dd6396c9acf15e214087
   shared_preferences_web: 141cce0c3ed1a1c5bf2a0e44f52d31eeb66e5ea9
   TOCropViewController: 20a14b6a7a098308bf369e7c8d700dc983a974e6
+  UMCCommon: 4e80f93492d300245683236668763dc5d0b04dbd
+  UMCCommonLog: 9b7ddde5d14a52fc1986ba5ac3121b8b2f433638
 
-PODFILE CHECKSUM: 901221b8b8010cf482aab6d3d52b54fa36d49d13
+PODFILE CHECKSUM: 2a7ef28f6c5ce29780780157fe9238439394f1aa
 
 COCOAPODS: 1.9.2

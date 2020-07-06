@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0A29CEB824B36FB9006E617B /* UMCommonSwift.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A29CEB524B36FB9006E617B /* UMCommonSwift.swift */; };
+		0A29CEB924B36FB9006E617B /* UMAnalyticsSwift.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A29CEB624B36FB9006E617B /* UMAnalyticsSwift.swift */; };
+		0A29CEBA24B36FB9006E617B /* UMCommonLogSwift.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A29CEB724B36FB9006E617B /* UMCommonLogSwift.swift */; };
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
 		4D84292A19D5E503C9B27E71 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8DC4A8536330EEA538E4ACC /* Pods_Runner.framework */; };
@@ -30,6 +33,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0A29CEB524B36FB9006E617B /* UMCommonSwift.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = UMCommonSwift.swift; path = UMSwift/UMCommonSwift.swift; sourceTree = "<group>"; };
+		0A29CEB624B36FB9006E617B /* UMAnalyticsSwift.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = UMAnalyticsSwift.swift; path = UMSwift/UMAnalyticsSwift.swift; sourceTree = "<group>"; };
+		0A29CEB724B36FB9006E617B /* UMCommonLogSwift.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = UMCommonLogSwift.swift; path = UMSwift/UMCommonLogSwift.swift; sourceTree = "<group>"; };
 		0A2BC97124AF8B6E00E42886 /* Runner.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Runner.entitlements; sourceTree = "<group>"; };
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
 		1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GeneratedPluginRegistrant.m; sourceTree = "<group>"; };
@@ -62,6 +68,16 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		0A29CEB424B36F68006E617B /* UMSwift */ = {
+			isa = PBXGroup;
+			children = (
+				0A29CEB624B36FB9006E617B /* UMAnalyticsSwift.swift */,
+				0A29CEB724B36FB9006E617B /* UMCommonLogSwift.swift */,
+				0A29CEB524B36FB9006E617B /* UMCommonSwift.swift */,
+			);
+			name = UMSwift;
+			sourceTree = "<group>";
+		};
 		0C1FBDD065E596199557106C /* Pods */ = {
 			isa = PBXGroup;
 			children = (
@@ -105,6 +121,7 @@
 		97C146F01CF9000F007C117D /* Runner */ = {
 			isa = PBXGroup;
 			children = (
+				0A29CEB424B36F68006E617B /* UMSwift */,
 				0A2BC97124AF8B6E00E42886 /* Runner.entitlements */,
 				97C146FA1CF9000F007C117D /* Main.storyboard */,
 				97C146FD1CF9000F007C117D /* Assets.xcassets */,
@@ -149,6 +166,7 @@
 				9705A1C41CF9048500538489 /* Embed Frameworks */,
 				3B06AD1E1E4923F5004D2608 /* Thin Binary */,
 				2D0B8422C66CC8775CF60F69 /* [CP] Embed Pods Frameworks */,
+				10C183534325659C136BC8E7 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -209,6 +227,21 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		10C183534325659C136BC8E7 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "[CP] Copy Pods Resources";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
 		15E167DA13890E444D87713A /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -281,8 +314,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0A29CEB924B36FB9006E617B /* UMAnalyticsSwift.swift in Sources */,
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
+				0A29CEBA24B36FB9006E617B /* UMCommonLogSwift.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
+				0A29CEB824B36FB9006E617B /* UMCommonSwift.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -376,7 +412,7 @@
 					"$(PROJECT_DIR)/Flutter",
 				);
 				INFOPLIST_FILE = Runner/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 10.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -516,7 +552,7 @@
 					"$(PROJECT_DIR)/Flutter",
 				);
 				INFOPLIST_FILE = Runner/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 10.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -549,7 +585,7 @@
 					"$(PROJECT_DIR)/Flutter",
 				);
 				INFOPLIST_FILE = Runner/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 10.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
