@@ -15,19 +15,19 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>$(FLUTTER_BUILD_NAME)</string>
+	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
-	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>describe why your app needs access to the camera</string>
+	<string>需要采集相机图片进行编辑，请允许APP访问相机</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>describe why your app needs permission for the photo library</string>
+	<string>需要保存图片到相册，请允许APP使用相册</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>describe why your app needs permission for the photo library</string>
+	<string>需要从相册采集图片进行编辑，请允许APP使用相册</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
@@ -47,5 +47,19 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+	<key>NSContactsUsageDescription</key>
+	<string>需要导入通讯录信息到草稿本，请允许APP访问通讯录</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>需要导入日历信息到草稿本，请允许APP访问日历</string>
+	<key>NSAppleMusicUsageDescription</key>
+	<string>需要导入媒体信息到草稿本，请允许APP访问媒体库</string>
+	<key>NSMotionUsageDescription</key>
+	<string>需要导入运动和健身信息到草稿本，请允许APP访问运动与健康</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>需要导入语言识别信息到草稿本，请允许APP访问语言识别</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>需要导入位置信息到草稿本，请允许APP访问位置</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>需要导入位置信息到草稿本，请允许APP访问位置</string>
 </dict>
 </plist>
