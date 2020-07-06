@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 
 class AppLocalizations {
@@ -125,6 +126,9 @@ class AppLocalizations {
   };
 
   String getLanguageText(String textID) {
+    if (Platform.isIOS) {
+      return _languageTextMap['zh'][textID];
+    }
     return _languageTextMap[locale.languageCode][textID];
   }
 
