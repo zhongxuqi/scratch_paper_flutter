@@ -9,7 +9,6 @@ import 'utils/cupertino.dart';
 import 'package:flutter_material_color_picker/flutter_material_color_picker.dart';
 import 'components/LineWeightPicker.dart';
 import 'components/Toast.dart';
-import 'package:flutter_share/flutter_share.dart';
 import 'package:fluwx/fluwx.dart' as fluwx;
 import 'dart:ui' as ui;
 import 'components/alertDialog.dart';
@@ -23,6 +22,10 @@ import 'components/shareWechatDialog.dart';
 import 'components/imagePickDialog.dart';
 import './utils/common.dart';
 import 'dart:io';
+import 'package:package_info/package_info.dart';
+import 'package:share/share.dart';
+
+typedef FreeExpiredCallback<T, D> = void Function(T needPay, D isVip);
 
 void main() => runApp(MyApp());
 
@@ -76,7 +79,6 @@ class _MainPageState extends State<MainPage> {
   final scratchGraphicsModes = <ScratchGraphicsMode>[ScratchGraphicsMode.line, ScratchGraphicsMode.square, ScratchGraphicsMode.circle, ScratchGraphicsMode.polygon];
   final GlobalKey<ScratchPaperState> _scratchPaperState = new GlobalKey<ScratchPaperState>();
 
-  var freeExpired = false;
   static const MaterialColor black = MaterialColor(
     0xFF000000,
     <int, Color>{
@@ -128,6 +130,7 @@ class _MainPageState extends State<MainPage> {
   bool shareWechat = false;
   int shareWechatDays = 0;
   String shareWechatUrl = "";
+  var needPay = false;
   bool isVip = false;
 
   @override
@@ -136,7 +139,6 @@ class _MainPageState extends State<MainPage> {
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.dark);
     fluwx.registerWxApi(
         appId: "wx27f355795896793b", doOnAndroid: true, doOnIOS: true);
-    checkFreeExpied();
 
     mypass.scratchPaper().then((resp) {
       Map<String, dynamic> respObj = json.decode(utf8.decode(resp.bodyBytes));
@@ -150,84 +152,54 @@ class _MainPageState extends State<MainPage> {
       shareWechatUrl = respDataShareWechat['url'];
       setState(() {});
     });
+    checkFirstOpen();
   }
 
-//  void checkPayBtn() async {
-//    var appChannel = await platform_custom.getAppChannel();
-//    print("appChannel $appChannel");
-//    var appVersion = await user.getAppVersion();
-//    mypass.getAppVersion().then((resp) {
-//      Map<String, dynamic> respObj = json.decode(utf8.decode(resp.bodyBytes));
-//      if (respObj['errno'] != 0) {
-//        return;
-//      }
-//      Map<String, int> respData = respObj['data'];
-//      var appVersion = respData['default'];
-//      if (respData.containsKey(appChannel)) {
-//        appVersion = respData['appChannel'];
-//      }
-//      print(appVersion);
-//      setState(() {
-//        showPayBtn = appVersion >= consts.AppVersion;
-//      });
-//    });
-//  }
+  void checkFirstOpen() async {
+    if (Platform.isAndroid) {
+      var isFirstOpen = await user.getFirstOpenKey();
+      if (isFirstOpen == null) {
 
-  void checkFreeExpied() async {
-    if (Platform.isIOS) {
-      return;
-    }
-    var isFirstOpen = await user.getFirstOpenKey();
-    if (isFirstOpen == null) {
+        // 首次打开展示用户协议
+        setState(() {
+          showUserNotice = true;
+        });
 
-      // 解决付费用户问题
-//      var currTime = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-//      var freeExpiredTime = await user.getFreeExpiredTime();
-//      if (freeExpiredTime != null && freeExpiredTime > currTime + 2 * user.DaySeconds) {
         user.setFirstOpenKey();
-//      } else {
-//        showUserNotice = true;
-//      }
-    }
-    var userID = await user.getUserID();
-    loginType = await user.getUserType();
-    setState(() {});
-    freeExpired = await user.isFreeExpired();
-    if (loginType != '') {
-      mypass.postAccount(loginType, userID).then((resp) async {
-        Map<String, dynamic> respObj = json.decode(utf8.decode(resp.bodyBytes));
-        if (respObj['errno'] != 0) {
-          return;
-        }
-        var currTime = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-        if (respObj['data']['expire_time'] > currTime) {
-          await user.addFreeExpired(7);
-          freeExpired = await user.isFreeExpired();
-          isVip = true;
-        } else {
-          isVip = false;
-        }
-      }).whenComplete(() {
-        setState(() {});
-      });
-    } else {
-      setState(() {});
+      }
     }
   }
 
-  void showVideoAds() async {
-    var result = await platform_custom.showVideoAds();
-    if (result == 'wait') {
-      showVideoAds();
+  void checkFreeExpired(FreeExpiredCallback callback) async {
+    if (Platform.isIOS) {
+      if (callback != null) callback(true, false);
       return;
-    } else if (result == 'fail') {
-      showErrorToast(AppLocalizations.of(context).getLanguageText('videoFailHint'));
-      return;
-    } else {
-      user.addFreeExpired(1);
-      setState(() {
-        freeExpired = false;
-      });
+    } else if (Platform.isAndroid) {
+      var userID = await user.getUserID();
+      loginType = await user.getUserType();
+      setState(() {});
+      var freeExpired = await user.isFreeExpired();
+      var isVip = false;
+      if (loginType != '') {
+        mypass.postAccount(loginType, userID).then((resp) async {
+          Map<String, dynamic> respObj = json.decode(utf8.decode(resp.bodyBytes));
+          if (respObj['errno'] != 0) {
+            return;
+          }
+          var currTime = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+          if (respObj['data']['expire_time'] > currTime) {
+            await user.addFreeExpired(7);
+            freeExpired = await user.isFreeExpired();
+            isVip = true;
+          } else {
+            isVip = false;
+          }
+        }).whenComplete(() {
+          if (callback != null) callback(freeExpired, isVip);
+        });
+      } else {
+        if (callback != null) callback(freeExpired, isVip);
+      }
     }
   }
 
@@ -285,7 +257,11 @@ class _MainPageState extends State<MainPage> {
                             setState(() {});
                             if (loginType != '') {
                               Navigator.of(context).pop();
-                              checkFreeExpied();
+                              checkFreeExpired((freeExpired, isVip) {
+                                setState(() {
+                                  this.isVip = isVip;
+                                });
+                              });
                             }
                           }
                       ),
@@ -300,7 +276,11 @@ class _MainPageState extends State<MainPage> {
                           setState(() {});
                           if (loginType != '') {
                             Navigator.of(context).pop();
-                            checkFreeExpied();
+                            checkFreeExpired((freeExpired, isVip) {
+                              setState(() {
+                                this.isVip = isVip;
+                              });
+                            });
                           }
                         }
                       ),
@@ -385,11 +365,27 @@ class _MainPageState extends State<MainPage> {
                     ),
                   ),
                   onSelected: (ScratchMode result) {
-                    setState(() {
-                      textInputerOffset = null;
-                      textCtl.text = "";
-                      scratchMode = result;
-                    });
+                    if (result == ScratchMode.edit || result == ScratchMode.move) {
+                      setState(() {
+                        textInputerOffset = null;
+                        textCtl.text = "";
+                        scratchMode = result;
+                      });
+                    } else {
+                      checkFreeExpired((needPay, isVip) {
+                        if (!needPay) {
+                          setState(() {
+                            textInputerOffset = null;
+                            textCtl.text = "";
+                            scratchMode = result;
+                          });
+                        } else {
+                          setState(() {
+                            this.needPay = needPay;
+                          });
+                        }
+                      });
+                    }
                   },
                   itemBuilder: (BuildContext context) {
                     return scratchModes.map((item) {
@@ -541,10 +537,7 @@ class _MainPageState extends State<MainPage> {
                             case MoreAction.export:
                               var imageFilePath = await _scratchPaperState.currentState.export();
                               if (imageFilePath != "") {
-                                await FlutterShare.shareFile(
-                                  title: 'ScratchPaper',
-                                  filePath: imageFilePath,
-                                );
+                                Share.shareFiles([imageFilePath]);
                               }
                               break;
                             case MoreAction.clear:
@@ -869,7 +862,7 @@ class _MainPageState extends State<MainPage> {
             ),
           ),
         ),
-        freeExpired&&!showUserNotice?Positioned(
+        needPay&&!showUserNotice?Positioned(
           top: 0,
           left: 0,
           bottom: 0,
@@ -906,23 +899,10 @@ class _MainPageState extends State<MainPage> {
                         ),
                       ),
                       onTap: () {
-                        SystemNavigator.pop();
+                        setState(() {
+                          needPay = false;
+                        });
                       },
-                    ),
-                  ],
-                ),
-                Row(
-                  children: <Widget>[
-                    RawMaterialButton(
-                      child: Text(
-                        AppLocalizations.of(context).getLanguageText('showAds'),
-                        style: TextStyle(
-                          color: Colors.green,
-                        ),
-                      ),
-                      onPressed: () {
-                        showVideoAds();
-                      }
                     ),
                   ],
                 ),

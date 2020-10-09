@@ -6,7 +6,6 @@ import 'dart:convert';
 final FirstOpenKey = "first-open-key";
 final FreeExiredTimeKey = "free-expired-time";
 final AppVersionKey = "app-version";
-final DaySeconds = 24 * 3600; // 24 * 3600
 
 final UserTypeKey = 'user-type';
 final UserExpiredTimeKey = 'user-expired-time';
@@ -35,22 +34,17 @@ Future<int> getAppVersion() async {
   return ret==null?0:ret;
 }
 
-Future getFreeExpiredTime() async {
-  var sharedPreference = await SharedPreferences.getInstance();
-  return sharedPreference.getInt(FreeExiredTimeKey);
-}
+//Future getFreeExpiredTime() async {
+////  var sharedPreference = await SharedPreferences.getInstance();
+////  return sharedPreference.getInt(FreeExiredTimeKey);
+////}
 
 Future<bool> isFreeExpired() async {
   var currTime = DateTime.now().millisecondsSinceEpoch ~/ 1000;
   var sharedPreference = await SharedPreferences.getInstance();
   var freeExpiredTs = sharedPreference.getInt(FreeExiredTimeKey);
   if (freeExpiredTs == null) {
-    freeExpiredTs = await platform_custom.getInstallTime();
-    freeExpiredTs = (freeExpiredTs ~/ 1000) + DaySeconds;
-    if (freeExpiredTs > currTime + DaySeconds) {
-      freeExpiredTs = currTime + DaySeconds;
-    }
-    sharedPreference.setInt(FreeExiredTimeKey, freeExpiredTs);
+    return DateTime.parse("2020-10-07 13:27:00").millisecondsSinceEpoch ~/ 1000 < currTime;
   }
   return freeExpiredTs < currTime;
 }
@@ -58,7 +52,7 @@ Future<bool> isFreeExpired() async {
 addFreeExpired(int day) async {
   var currTime = DateTime.now().millisecondsSinceEpoch ~/ 1000;
   var sharedPreference = await SharedPreferences.getInstance();
-  sharedPreference.setInt(FreeExiredTimeKey, currTime + day * DaySeconds);
+  sharedPreference.setInt(FreeExiredTimeKey, currTime + day * 24 * 3600);
 }
 
 clearUserInfo() async {
