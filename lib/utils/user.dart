@@ -2,10 +2,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 import './platform_custom.dart' as platform_custom;
 import 'dart:convert';
+import 'package:package_info/package_info.dart';
 
 final FirstOpenKey = "first-open-key";
 final FreeExiredTimeKey = "free-expired-time";
-final AppVersionKey = "app-version";
+final BetaVersionKey = "beta-version";
 
 final UserTypeKey = 'user-type';
 final UserExpiredTimeKey = 'user-expired-time';
@@ -23,14 +24,14 @@ getFirstOpenKey() async {
   return sharedPreference.getInt(FirstOpenKey);
 }
 
-setAppVersion(int v) async {
+setBetaVersion(int v) async {
   var sharedPreference = await SharedPreferences.getInstance();
-  sharedPreference.setInt(AppVersionKey, v);
+  sharedPreference.setInt(BetaVersionKey, v);
 }
 
-Future<int> getAppVersion() async {
+Future<int> getBetaVersion() async {
   var sharedPreference = await SharedPreferences.getInstance();
-  var ret = sharedPreference.getInt(AppVersionKey);
+  var ret = sharedPreference.getInt(BetaVersionKey);
   return ret==null?0:ret;
 }
 
@@ -44,7 +45,13 @@ Future<bool> isFreeExpired() async {
   var sharedPreference = await SharedPreferences.getInstance();
   var freeExpiredTs = sharedPreference.getInt(FreeExiredTimeKey);
   if (freeExpiredTs == null) {
-    return DateTime.parse("2020-10-07 13:27:00").millisecondsSinceEpoch ~/ 1000 < currTime;
+    var packageInfo = await PackageInfo.fromPlatform();
+    var buildVersion = int.parse(packageInfo.buildNumber);
+    var betaVersion = await getBetaVersion();
+    if (betaVersion > 0 && buildVersion < betaVersion) {
+      return true;
+    }
+    return DateTime.parse("2020-10-16 00:00:00").millisecondsSinceEpoch ~/ 1000 < currTime;
   }
   return freeExpiredTs < currTime;
 }
@@ -120,3 +127,4 @@ loginWeibo() async {
   await setUserExpiredTime((qqUserInfo['expires_time'] as int) ~/ 1000);
   await setUserID(qqUserInfo['uid']);
 }
+
