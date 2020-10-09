@@ -706,6 +706,10 @@ class _MainPageState extends State<MainPage> {
                               });
                             });
                             break;
+                          case MoreAction.privacy:
+                            setState(() {
+                              showUserNotice = true;
+                            });
                         }
                       },
                       itemBuilder: (BuildContext context) {
@@ -727,6 +731,7 @@ class _MainPageState extends State<MainPage> {
                           actions.add(MoreAction.invitWechat);
                         }
                         actions.add(MoreAction.feedback);
+                        actions.add(MoreAction.privacy);
                         return actions.map((item) {
                           if (item == MoreAction.user) {
                             return PopupMenuItem<MoreAction>(
@@ -1253,6 +1258,7 @@ enum MoreAction {
   wechat,
   invitWechat,
   feedback,
+  privacy
 }
 
 IconData MoreAction2Icon(MoreAction action) {
@@ -1273,6 +1279,8 @@ IconData MoreAction2Icon(MoreAction action) {
       return IconFonts.wechat;
     case MoreAction.feedback:
       return IconFonts.feedback;
+    case MoreAction.privacy:
+      return IconFonts.privacy;
     default:
       return null;
   }
@@ -1296,6 +1304,8 @@ String MoreAction2Desc(BuildContext context, MoreAction action) {
       return AppLocalizations.of(context).getLanguageText('inviteFriend');
     case MoreAction.feedback:
       return AppLocalizations.of(context).getLanguageText('feedback');
+    case MoreAction.privacy:
+      return AppLocalizations.of(context).getLanguageText('privacy');
     default:
       return null;
   }

@@ -67,6 +67,7 @@ class AppLocalizations {
       'camera': 'Camera',
       'importImageEdit': 'Import Image Edit',
       'exporting': 'Exporting',
+      'privacy': 'Privacy',
     },
     'zh': {
       'edit': '编辑',
@@ -122,6 +123,7 @@ class AppLocalizations {
       'camera': '相机',
       'importImageEdit': '导入图片编辑',
       'exporting': '导出中',
+      'privacy': '隐私政策',
     }
   };
 

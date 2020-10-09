@@ -32,4 +32,5 @@ class IconFonts {
   static const IconData close = IconData(0xe673, fontFamily: 'iconfont');
   static const IconData image = IconData(0xe730, fontFamily: 'iconfont');
   static const IconData camera = IconData(0xe629, fontFamily: 'iconfont');
+  static const IconData privacy = IconData(0xe662, fontFamily: 'iconfont');
 }
