@@ -208,7 +208,7 @@ class _MainPageState extends State<MainPage> {
 
   void checkFreeExpired(FreeExpiredCallback callback) async {
     if (Platform.isIOS) {
-      if (callback != null) callback(true, false);
+      if (callback != null) callback(false, false);
       return;
     } else if (Platform.isAndroid) {
       var userID = await user.getUserID();
@@ -726,9 +726,9 @@ class _MainPageState extends State<MainPage> {
                         if (Platform.isAndroid) {
                           actions.add(MoreAction.gallery);
                           actions.add(MoreAction.wechat);
-                        }
-                        if (shareWechat) {
-                          actions.add(MoreAction.invitWechat);
+                          if (shareWechat) {
+                            actions.add(MoreAction.invitWechat);
+                          }
                         }
                         actions.add(MoreAction.feedback);
                         actions.add(MoreAction.privacy);
