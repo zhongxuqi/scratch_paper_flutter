@@ -1181,17 +1181,18 @@ class _MainPageState extends State<MainPage> {
                     Row(
                       children: <Widget>[
                         RawMaterialButton(
-                            child: Text(
-                              AppLocalizations.of(context)
-                                  .getLanguageText('showUserNotice'),
-                              style: TextStyle(
-                                color: Colors.deepOrange,
-                                fontSize: 14,
-                              ),
+                          child: Text(
+                            AppLocalizations.of(context)
+                                .getLanguageText('showUserNotice'),
+                            style: TextStyle(
+                              color: Colors.deepOrange,
+                              fontSize: 14,
                             ),
-                            onPressed: () {
-                              showUserNoticeDialog(context);
-                            }),
+                          ),
+                          onPressed: () {
+                            showUserNoticeDialog(context);
+                          },
+                        ),
                       ],
                     ),
                     Row(
